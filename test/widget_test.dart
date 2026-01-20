@@ -5,26 +5,44 @@
 // gestures. You can also use WidgetTester to find child widgets in the widget
 // tree, read text, and verify that the values of widget properties are correct.
 
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:app/main.dart';
+import 'package:app/models/user_model.dart';
+import 'package:app/core/constants.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  group('ProMarket App Tests', () {
+    test('UserModel creation and validation', () {
+      final user = UserModel(
+        uid: 'test-uid',
+        name: 'Test User',
+        email: 'test@example.com',
+        role: 'client',
+        createdAt: DateTime.now(),
+      );
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+      expect(user.uid, 'test-uid');
+      expect(user.name, 'Test User');
+      expect(user.email, 'test@example.com');
+      expect(user.role, 'client');
+      expect(user.isClient, true);
+      expect(user.isAdmin, false);
+      expect(user.isEmployee, false);
+      expect(user.isValid, true);
+    });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    test('App constants are defined', () {
+      expect(AppConstants.appName, 'ProMarket');
+      expect(AppConstants.appVersion, '1.0.0');
+      expect(AppConstants.adminRole, 'admin');
+      expect(AppConstants.clientRole, 'client');
+      expect(AppConstants.employeeRole, 'employee');
+    });
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    test('App strings are defined', () {
+      expect(AppStrings.signInWithGoogle, 'Sign in with Google');
+      expect(AppStrings.admin, 'Admin');
+      expect(AppStrings.client, 'Client');
+      expect(AppStrings.employee, 'Employee');
+    });
   });
 }

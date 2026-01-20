@@ -1,121 +1,242 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:provider/provider.dart';
+import 'package:sizer/sizer.dart';
 
-void main() {
-  runApp(const MyApp());
+import 'core/theme.dart';
+import 'core/app_config.dart';
+import 'providers/auth_provider.dart';
+import 'providers/product_provider.dart';
+import 'providers/booking_provider.dart';
+import 'providers/message_provider.dart';
+import 'providers/employee_provider.dart';
+import 'routing/app_router.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  try {
+    // Initialize Firebase
+    await Firebase.initializeApp();
+    AppConfig.log('Firebase initialized successfully');
+    
+    runApp(const ProMarketApp());
+  } catch (e) {
+    AppConfig.logError('Failed to initialize Firebase', e);
+    runApp(const ErrorApp());
+  }
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class ProMarketApp extends StatelessWidget {
+  const ProMarketApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
+    return MultiProvider(
+      providers: [
+        // Auth Provider - Must be first as others depend on it
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        
+        // Data Providers
+        ChangeNotifierProvider(create: (_) => ProductProvider()),
+        ChangeNotifierProvider(create: (_) => EmployeeProvider()),
+        
+        // User-specific providers that will be initialized when user signs in
+        ChangeNotifierProvider(create: (_) => BookingProvider()),
+        ChangeNotifierProvider(create: (_) => MessageProvider()),
+      ],
+      child: Sizer(
+        builder: (context, orientation, deviceType) {
+          return Consumer<AuthProvider>(
+            builder: (context, authProvider, child) {
+              return MaterialApp(
+                title: AppConfig.appName,
+                debugShowCheckedModeBanner: false,
+                theme: AppTheme.lightTheme,
+                darkTheme: AppTheme.darkTheme,
+                themeMode: ThemeMode.system,
+                
+                // Initial route based on auth state
+                initialRoute: _getInitialRoute(authProvider),
+                
+                // Route generator
+                onGenerateRoute: AppRouter.generateRoute,
+                
+                // Navigation observer for logging
+                navigatorObservers: [
+                  _NavigationObserver(),
+                ],
+                
+                // Builder for global error handling
+                builder: (context, widget) {
+                  return _AppBuilder(
+                    authProvider: authProvider,
+                    child: widget ?? const SizedBox(),
+                  );
+                },
+              );
+            },
+          );
+        },
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+    );
+  }
+
+  String _getInitialRoute(AuthProvider authProvider) {
+    if (!authProvider.isInitialized) {
+      return '/login'; // Show login while initializing
+    }
+    
+    return AppRouter.getInitialRoute(
+      isSignedIn: authProvider.isSignedIn,
+      needsOnboarding: authProvider.needsOnboarding(),
+      userRole: authProvider.userRole,
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+class _AppBuilder extends StatefulWidget {
+  final AuthProvider authProvider;
+  final Widget child;
 
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
+  const _AppBuilder({
+    required this.authProvider,
+    required this.child,
+  });
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<_AppBuilder> createState() => _AppBuilderState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class _AppBuilderState extends State<_AppBuilder> {
+  @override
+  void initState() {
+    super.initState();
+    _initializeUserSpecificProviders();
+  }
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
+  @override
+  void didUpdateWidget(_AppBuilder oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    
+    // Check if user changed
+    if (oldWidget.authProvider.userId != widget.authProvider.userId) {
+      _initializeUserSpecificProviders();
+    }
+  }
+
+  void _initializeUserSpecificProviders() {
+    if (widget.authProvider.isSignedIn && widget.authProvider.userId != null) {
+      final userId = widget.authProvider.userId!;
+      final userRole = widget.authProvider.userRole ?? 'client';
+      
+      AppConfig.log('Initializing user-specific providers for: $userId');
+      
+      // Initialize booking provider
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          context.read<BookingProvider>().initializeBookings(userId, userRole);
+          context.read<MessageProvider>().initializeMessages(userId);
+        }
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
+    return widget.child;
+  }
+}
+
+class _NavigationObserver extends NavigatorObserver {
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    super.didPush(route, previousRoute);
+    AppConfig.log('Navigation: Pushed ${route.settings.name}');
+  }
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    super.didPop(route, previousRoute);
+    AppConfig.log('Navigation: Popped ${route.settings.name}');
+  }
+
+  @override
+  void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
+    super.didReplace(newRoute: newRoute, oldRoute: oldRoute);
+    AppConfig.log('Navigation: Replaced ${oldRoute?.settings.name} with ${newRoute?.settings.name}');
+  }
+}
+
+// Error app to show when Firebase initialization fails
+class ErrorApp extends StatelessWidget {
+  const ErrorApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'ProMarket - Error',
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.lightTheme,
+      home: const ErrorScreen(),
+    );
+  }
+}
+
+class ErrorScreen extends StatelessWidget {
+  const ErrorScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
+      backgroundColor: Colors.red.shade50,
       body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: .center,
-          children: [
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.all(32.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.error_outline,
+                size: 80,
+                color: Colors.red.shade400,
+              ),
+              const SizedBox(height: 24),
+              Text(
+                'Initialization Error',
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  color: Colors.red.shade700,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Failed to initialize the application. Please check your internet connection and try again.',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: Colors.red.shade600,
+                ),
+              ),
+              const SizedBox(height: 32),
+              ElevatedButton.icon(
+                onPressed: () {
+                  // Restart the app
+                  main();
+                },
+                icon: const Icon(Icons.refresh),
+                label: const Text('Retry'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red.shade400,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 16,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
       ),
     );
   }
