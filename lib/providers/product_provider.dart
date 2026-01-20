@@ -93,7 +93,7 @@ class ProductProvider extends ChangeNotifier {
         title: title,
         description: description,
         price: price,
-        imageUrl: imageUrl,
+        imageUrls: [imageUrl],
         category: category,
         createdBy: createdBy,
         createdAt: DateTime.now(),
@@ -150,7 +150,7 @@ class ProductProvider extends ChangeNotifier {
       if (imageBytes != null && imageName != null) {
         final imageUrl = await _cloudinaryService.uploadImage(imageBytes, imageName);
         if (imageUrl != null) {
-          updateData['imageUrl'] = imageUrl;
+          updateData['imageUrls'] = [imageUrl];
         }
       }
       

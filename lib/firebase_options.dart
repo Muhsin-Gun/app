@@ -89,4 +89,5 @@ class DefaultFirebaseOptions {
     storageBucket: 'eshop-be005.firebasestorage.app',
     measurementId: 'G-8X9D7MF0PW',
   );
+
 }

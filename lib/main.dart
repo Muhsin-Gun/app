@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 import 'package:provider/provider.dart';
 import 'package:sizer/sizer.dart';
 
@@ -10,6 +11,7 @@ import 'providers/product_provider.dart';
 import 'providers/booking_provider.dart';
 import 'providers/message_provider.dart';
 import 'providers/employee_provider.dart';
+import 'providers/marketplace_provider.dart';
 import 'routing/app_router.dart';
 
 void main() async {
@@ -17,7 +19,9 @@ void main() async {
   
   try {
     // Initialize Firebase
-    await Firebase.initializeApp();
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
     AppConfig.log('Firebase initialized successfully');
     
     runApp(const ProMarketApp());
@@ -44,6 +48,7 @@ class ProMarketApp extends StatelessWidget {
         // User-specific providers that will be initialized when user signs in
         ChangeNotifierProvider(create: (_) => BookingProvider()),
         ChangeNotifierProvider(create: (_) => MessageProvider()),
+        ChangeNotifierProvider(create: (_) => MarketplaceProvider()),
       ],
       child: Sizer(
         builder: (context, orientation, deviceType) {

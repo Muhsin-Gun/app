@@ -1,11 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 
 class ProductModel {
   final String id;
   final String title;
   final String description;
   final double price;
-  final String imageUrl;
+  final List<String> imageUrls;
   final String category;
   final String createdBy;
   final DateTime createdAt;
@@ -23,7 +24,7 @@ class ProductModel {
     required this.title,
     required this.description,
     required this.price,
-    required this.imageUrl,
+    required this.imageUrls,
     required this.category,
     required this.createdBy,
     required this.createdAt,
@@ -44,7 +45,7 @@ class ProductModel {
       'title': title,
       'description': description,
       'price': price,
-      'imageUrl': imageUrl,
+      'imageUrls': imageUrls,
       'category': category,
       'createdBy': createdBy,
       'createdAt': Timestamp.fromDate(createdAt),
@@ -66,7 +67,7 @@ class ProductModel {
       title: map['title'] ?? '',
       description: map['description'] ?? '',
       price: (map['price'] ?? 0.0).toDouble(),
-      imageUrl: map['imageUrl'] ?? '',
+      imageUrls: List<String>.from(map['imageUrls'] ?? []),
       category: map['category'] ?? '',
       createdBy: map['createdBy'] ?? '',
       createdAt: (map['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
@@ -94,7 +95,7 @@ class ProductModel {
     String? title,
     String? description,
     double? price,
-    String? imageUrl,
+    List<String>? imageUrls,
     String? category,
     String? createdBy,
     DateTime? createdAt,
@@ -112,7 +113,7 @@ class ProductModel {
       title: title ?? this.title,
       description: description ?? this.description,
       price: price ?? this.price,
-      imageUrl: imageUrl ?? this.imageUrl,
+      imageUrls: imageUrls ?? this.imageUrls,
       category: category ?? this.category,
       createdBy: createdBy ?? this.createdBy,
       createdAt: createdAt ?? this.createdAt,
@@ -145,7 +146,10 @@ class ProductModel {
   }
 
   // Check if product has image
-  bool get hasImage => imageUrl.isNotEmpty;
+  bool get hasImage => imageUrls.isNotEmpty;
+
+  // Compatibility getter
+  String get imageUrl => imageUrls.isNotEmpty ? imageUrls.first : '';
 
   // Check if product is bookable
   bool get isBookable => isActive && isAvailable;
@@ -189,7 +193,7 @@ class ProductModel {
            other.title == title &&
            other.description == description &&
            other.price == price &&
-           other.imageUrl == imageUrl &&
+           listEquals(other.imageUrls, imageUrls) &&
            other.category == category &&
            other.createdBy == createdBy &&
            other.isActive == isActive;
@@ -201,7 +205,7 @@ class ProductModel {
            title.hashCode ^
            description.hashCode ^
            price.hashCode ^
-           imageUrl.hashCode ^
+           imageUrls.hashCode ^
            category.hashCode ^
            createdBy.hashCode ^
            isActive.hashCode;

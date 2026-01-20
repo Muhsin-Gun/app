@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import '../core/app_config.dart';
-import '../features/auth/login_screen.dart';
+import '../features/auth/screens/login_screen.dart';
+import '../features/auth/screens/signup_screen.dart';
 import '../features/auth/onboarding_screen.dart';
 import '../features/auth/role_selector_screen.dart';
 import '../features/admin/admin_dashboard_screen.dart';
 import '../features/client/client_dashboard_screen.dart';
 import '../features/employee/employee_dashboard_screen.dart';
+import '../features/profile/screens/provider_profile_screen.dart';
 
 class AppRouter {
-  static const String loginRoute = '/login';
+  static const String loginRoute = '/LoginScreen';
+  static const String signupRoute = '/SignupScreen';
   static const String onboardingRoute = '/onboarding';
   static const String roleSelectorRoute = '/role-selector';
   static const String adminDashboardRoute = '/admin-dashboard';
@@ -23,6 +26,9 @@ class AppRouter {
       case '/':
       case loginRoute:
         return _buildRoute(const LoginScreen(), settings);
+
+      case signupRoute:
+        return _buildRoute(const SignupScreen(), settings);
         
       case onboardingRoute:
         return _buildRoute(const OnboardingScreen(), settings);
@@ -38,6 +44,10 @@ class AppRouter {
         
       case employeeDashboardRoute:
         return _buildRoute(const EmployeeDashboardScreen(), settings);
+
+      case '/provider-profile':
+        final args = settings.arguments as String;
+        return _buildRoute(ProviderProfileScreen(providerId: args), settings);
         
       default:
         AppConfig.logError('Unknown route: ${settings.name}');

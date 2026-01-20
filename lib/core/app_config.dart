@@ -12,15 +12,15 @@ class AppConfig {
   static const String firebaseStorageBucket = 'your-storage-bucket';
   
   // Google Sign-In Configuration
-  static const String googleWebClientId = 'your-web-client-id.apps.googleusercontent.com';
+  static const String googleWebClientId = '419781318218-kui6dsjb3cn0gna1h62tpmd34vckoh0g.apps.googleusercontent.com';
   static const String googleAndroidClientId = 'your-android-client-id.apps.googleusercontent.com';
   static const String googleIosClientId = 'your-ios-client-id.apps.googleusercontent.com';
   
   // Cloudinary Configuration
-  static const String cloudinaryCloudName = 'your-cloud-name';
+  static const String cloudinaryCloudName = 'ddwfkeess';
   static const String cloudinaryApiKey = 'your-api-key';
   static const String cloudinaryApiSecret = 'your-api-secret';
-  static const String cloudinaryUploadPreset = 'your-upload-preset';
+  static const String cloudinaryUploadPreset = 'ecommerce';
   
   // App Configuration
   static const String appName = 'ProMarket';

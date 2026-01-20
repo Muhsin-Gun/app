@@ -212,6 +212,7 @@ class AppTheme {
         ),
       ),
       
+      /*
       cardTheme: CardTheme(
         color: cardColor,
         elevation: 2,
@@ -220,6 +221,7 @@ class AppTheme {
           borderRadius: BorderRadius.circular(12),
         ),
       ),
+      */
       
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         backgroundColor: surfaceColor,
