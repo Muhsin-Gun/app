@@ -9,7 +9,7 @@ import 'core/app_config.dart';
 import 'providers/auth_provider.dart';
 import 'providers/product_provider.dart';
 import 'providers/booking_provider.dart';
-import 'providers/message_provider.dart';
+import 'providers/chat_provider.dart';
 import 'providers/employee_provider.dart';
 import 'providers/marketplace_provider.dart';
 import 'routing/app_router.dart';
@@ -47,7 +47,7 @@ class ProMarketApp extends StatelessWidget {
         
         // User-specific providers that will be initialized when user signs in
         ChangeNotifierProvider(create: (_) => BookingProvider()),
-        ChangeNotifierProvider(create: (_) => MessageProvider()),
+        ChangeNotifierProvider(create: (_) => ChatProvider()),
         ChangeNotifierProvider(create: (_) => MarketplaceProvider()),
       ],
       child: Sizer(
@@ -141,7 +141,7 @@ class _AppBuilderState extends State<_AppBuilder> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           context.read<BookingProvider>().initializeBookings(userId, userRole);
-          context.read<MessageProvider>().initializeMessages(userId);
+          // context.read<ChatProvider>(); // Initialize if needed, though stream handles it
         }
       });
     }

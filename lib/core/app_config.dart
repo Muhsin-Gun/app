@@ -95,18 +95,18 @@ class AppConfig {
   
   static void log(String message) {
     if (enableLogging) {
-      print('[${DateTime.now().toIso8601String()}] $message');
+      debugPrint('[${DateTime.now().toIso8601String()}] $message');
     }
   }
   
   static void logError(String message, [dynamic error, StackTrace? stackTrace]) {
     if (enableLogging) {
-      print('[ERROR ${DateTime.now().toIso8601String()}] $message');
+      debugPrint('[ERROR ${DateTime.now().toIso8601String()}] $message');
       if (error != null) {
-        print('Error: $error');
+        debugPrint('Error: $error');
       }
       if (stackTrace != null) {
-        print('Stack trace: $stackTrace');
+        debugPrint('Stack trace: $stackTrace');
       }
     }
   }

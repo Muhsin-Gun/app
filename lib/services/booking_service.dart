@@ -1,7 +1,7 @@
 import '../core/app_config.dart';
 import '../models/booking_model.dart';
 import '../models/user_model.dart';
-import '../models/product_model.dart';
+import '../core/constants.dart';
 import 'firestore_service.dart';
 
 class BookingService {

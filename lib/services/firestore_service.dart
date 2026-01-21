@@ -274,7 +274,7 @@ class FirestoreService {
     return query
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs.map((doc) => BookingModel.fromDocument(doc)).toList());
+        .map((snapshot) => snapshot.docs.map((doc) => BookingModel.fromDocument(doc)).toList().cast<BookingModel>());
   }
 
   // Get bookings by status
@@ -284,7 +284,7 @@ class FirestoreService {
         .where('status', isEqualTo: status)
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs.map((doc) => BookingModel.fromDocument(doc)).toList());
+        .map((snapshot) => snapshot.docs.map((doc) => BookingModel.fromDocument(doc)).toList().cast<BookingModel>());
   }
 
   // Update booking
@@ -364,7 +364,7 @@ class FirestoreService {
         .orderBy('timestamp', descending: true)
         .snapshots()
         .map((snapshot) {
-          final messages = snapshot.docs.map((doc) => MessageModel.fromDocument(doc)).toList();
+          final messages = snapshot.docs.map<MessageModel>((doc) => MessageModel.fromDocument(doc)).toList();
           
           if (bookingId == null) {
             // Filter messages between the two users
@@ -385,7 +385,7 @@ class FirestoreService {
         .where('senderId', isEqualTo: userId)
         .orderBy('timestamp', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs.map((doc) => MessageModel.fromDocument(doc)).toList());
+        .map((snapshot) => snapshot.docs.map<MessageModel>((doc) => MessageModel.fromDocument(doc)).toList());
   }
 
   // Mark message as read

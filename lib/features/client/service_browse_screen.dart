@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sizer/sizer.dart';
 import '../../core/theme.dart';
+import '../../core/utils/animations.dart';
 import '../../providers/product_provider.dart';
 import '../../widgets/custom_icon_widget.dart';
+import '../../core/widgets/responsive_wrapper.dart';
 import '../../widgets/custom_image_widget.dart';
 import '../../models/product_model.dart';
 import 'booking_form_screen.dart';
@@ -102,7 +104,7 @@ class _ServiceBrowseScreenState extends State<ServiceBrowseScreen> {
                 color: theme.colorScheme.surface,
                 boxShadow: [
                   BoxShadow(
-                    color: theme.shadowColor.withOpacity(0.1),
+                    color: theme.shadowColor.withValues(alpha: 0.1),
                     blurRadius: 4,
                     offset: const Offset(0, 2),
                   ),
@@ -112,9 +114,9 @@ class _ServiceBrowseScreenState extends State<ServiceBrowseScreen> {
                 children: [
                   // Search Bar
                   Container(
-                    height: 6.h,
+                    height: 48, // Fixed height for web compatibility
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.surfaceVariant,
+                      color: theme.colorScheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: TextField(
@@ -157,7 +159,7 @@ class _ServiceBrowseScreenState extends State<ServiceBrowseScreen> {
                           height: 5.h,
                           padding: EdgeInsets.symmetric(horizontal: 3.w),
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.surfaceVariant,
+                            color: theme.colorScheme.surfaceContainerHighest,
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: DropdownButtonHideUnderline(
@@ -179,7 +181,7 @@ class _ServiceBrowseScreenState extends State<ServiceBrowseScreen> {
                         height: 5.h,
                         width: 5.h,
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.surfaceVariant,
+                          color: theme.colorScheme.surfaceContainerHighest,
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: IconButton(
@@ -219,8 +221,8 @@ class _ServiceBrowseScreenState extends State<ServiceBrowseScreen> {
                         padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.h),
                         decoration: BoxDecoration(
                           color: isSelected 
-                              ? category.color.withOpacity(0.1)
-                              : theme.colorScheme.surfaceVariant,
+                              ? category.color.withValues(alpha: 0.1)
+                              : theme.colorScheme.surfaceContainerHighest,
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
                             color: isSelected 
@@ -264,9 +266,10 @@ class _ServiceBrowseScreenState extends State<ServiceBrowseScreen> {
             Expanded(
               child: Consumer<ProductProvider>(
                 builder: (context, productProvider, child) {
-                  if (productProvider.isLoading) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
+                  if (productProvider.isLoading && productProvider.products.isEmpty) {
+            return const Center(child: CircularProgressIndicator());
+          }
+                  
 
                   final filteredProducts = _filterAndSortProducts(productProvider.products);
 
@@ -302,7 +305,7 @@ class _ServiceBrowseScreenState extends State<ServiceBrowseScreen> {
                   return GridView.builder(
                     padding: EdgeInsets.all(4.w),
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
+                      crossAxisCount: ResponsiveBreakpoints.getGridColumns(context),
                       crossAxisSpacing: 3.w,
                       mainAxisSpacing: 3.w,
                       childAspectRatio: 0.75,
@@ -310,9 +313,14 @@ class _ServiceBrowseScreenState extends State<ServiceBrowseScreen> {
                     itemCount: filteredProducts.length,
                     itemBuilder: (context, index) {
                       final product = filteredProducts[index];
-                      return ServiceCard(
-                        product: product,
-                        onTap: () => _showServiceDetails(context, product),
+                      return FadeListItem(
+                        index: index,
+                        child: HoverWidget(
+                          child: ServiceCard(
+                            product: product,
+                            onTap: () => _showServiceDetails(context, product),
+                          ),
+                        ),
                       );
                     },
                   );
@@ -368,7 +376,7 @@ class ServiceCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: theme.shadowColor.withOpacity(0.1),
+              color: theme.shadowColor.withValues(alpha: 0.1),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -377,17 +385,20 @@ class ServiceCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image
+            // Image with Hero animation
             Expanded(
               flex: 3,
-              child: ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-                child: CustomImageWidget(
-                  imageUrl: product.imageUrls.isNotEmpty ? product.imageUrls.first : '',
-                  width: double.infinity,
-                  height: double.infinity,
-                  fit: BoxFit.cover,
-                  semanticLabel: product.title,
+              child: Hero(
+                tag: 'service-image-${product.id}',
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                  child: CustomImageWidget(
+                    imageUrl: product.imageUrls.isNotEmpty ? product.imageUrls.first : '',
+                    width: double.infinity,
+                    height: double.infinity,
+                    fit: BoxFit.cover,
+                    semanticLabel: product.title,
+                  ),
                 ),
               ),
             ),
@@ -502,8 +513,8 @@ class FilterBottomSheet extends StatelessWidget {
                   padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.5.h),
                   decoration: BoxDecoration(
                     color: isSelected 
-                        ? category.color.withOpacity(0.1)
-                        : theme.colorScheme.surfaceVariant,
+                        ? category.color.withValues(alpha: 0.1)
+                        : theme.colorScheme.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
                       color: isSelected 
@@ -572,19 +583,27 @@ class ServiceDetailsScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image Gallery
+            // Image Gallery with Hero animation
             SizedBox(
               height: 30.h,
               child: PageView.builder(
                 itemCount: product.imageUrls.length,
                 itemBuilder: (context, index) {
-                  return CustomImageWidget(
+                  final imageWidget = CustomImageWidget(
                     imageUrl: product.imageUrls[index],
                     width: double.infinity,
                     height: 30.h,
                     fit: BoxFit.cover,
                     semanticLabel: '${product.title} image ${index + 1}',
                   );
+                  // Only first image has Hero for smooth transition
+                  if (index == 0) {
+                    return Hero(
+                      tag: 'service-image-${product.id}',
+                      child: imageWidget,
+                    );
+                  }
+                  return imageWidget;
                 },
               ),
             ),
@@ -639,7 +658,7 @@ class ServiceDetailsScreen extends StatelessWidget {
                       Container(
                         padding: EdgeInsets.symmetric(horizontal: 3.w, vertical: 1.w),
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.primary.withOpacity(0.1),
+                          color: theme.colorScheme.primary.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
@@ -683,7 +702,7 @@ class ServiceDetailsScreen extends StatelessWidget {
           color: theme.colorScheme.surface,
           boxShadow: [
             BoxShadow(
-              color: theme.shadowColor.withOpacity(0.1),
+              color: theme.shadowColor.withValues(alpha: 0.1),
               blurRadius: 8,
               offset: const Offset(0, -2),
             ),

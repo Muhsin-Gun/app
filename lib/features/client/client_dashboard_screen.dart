@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../core/theme.dart';
+import '../../core/utils/animations.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/product_provider.dart';
 import '../../providers/booking_provider.dart';
@@ -12,6 +13,8 @@ import '../../widgets/custom_bottom_bar.dart';
 import '../../widgets/custom_image_widget.dart';
 import 'service_browse_screen.dart';
 import 'client_bookings_screen.dart';
+import 'booking_form_screen.dart';
+import '../../models/product_model.dart';
 
 class ClientDashboardScreen extends StatefulWidget {
   const ClientDashboardScreen({super.key});
@@ -76,10 +79,16 @@ class ClientHomePage extends StatelessWidget {
 
     return Scaffold(
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+        child: RefreshIndicator(
+          onRefresh: () async {
+            // Refresh data
+            await context.read<BookingProvider>().refreshBookings();
+          },
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
               // Header Section
               Container(
                 padding: EdgeInsets.all(4.w),
@@ -87,7 +96,7 @@ class ClientHomePage extends StatelessWidget {
                   color: theme.colorScheme.surface,
                   boxShadow: [
                     BoxShadow(
-                      color: theme.shadowColor.withOpacity(0.1),
+                      color: theme.shadowColor.withValues(alpha: 0.1),
                       blurRadius: 4,
                       offset: const Offset(0, 2),
                     ),
@@ -100,9 +109,9 @@ class ClientHomePage extends StatelessWidget {
                       children: [
                         Expanded(
                           child: Container(
-                            height: 6.h,
+                            height: 48, // Fixed height for web compatibility
                             decoration: BoxDecoration(
-                              color: theme.colorScheme.surfaceVariant,
+                              color: theme.colorScheme.surfaceContainerHighest,
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Row(
@@ -131,10 +140,10 @@ class ClientHomePage extends StatelessWidget {
                         ),
                         SizedBox(width: 3.w),
                         Container(
-                          height: 6.h,
+                          height: 48, // Fixed height for web compatibility
                           width: 6.h,
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.surfaceVariant,
+                            color: theme.colorScheme.surfaceContainerHighest,
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Stack(
@@ -243,7 +252,15 @@ class ClientHomePage extends StatelessWidget {
                   separatorBuilder: (context, index) => SizedBox(width: 3.w),
                   itemBuilder: (context, index) {
                     final category = _serviceCategories[index];
-                    return _CategoryCard(category: category);
+                    return FadeListItem(
+                      index: index,
+                      child: HoverWidget(
+                        child: ScaleButton(
+                          onTap: () {},
+                          child: _CategoryCard(category: category),
+                        ),
+                      ),
+                    );
                   },
                 ),
               ),
@@ -281,7 +298,12 @@ class ClientHomePage extends StatelessWidget {
                   separatorBuilder: (context, index) => SizedBox(width: 3.w),
                   itemBuilder: (context, index) {
                     final service = _featuredServices[index];
-                    return _ServiceCard(service: service);
+                    return FadeListItem(
+                      index: index,
+                      child: HoverWidget(
+                        child: _ServiceCard(service: service),
+                      ),
+                    );
                   },
                 ),
               ),
@@ -311,7 +333,7 @@ class ClientHomePage extends StatelessWidget {
                       child: Container(
                         padding: EdgeInsets.all(4.w),
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+                          color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Column(
@@ -350,7 +372,12 @@ class ClientHomePage extends StatelessWidget {
                     separatorBuilder: (context, index) => SizedBox(height: 2.h),
                     itemBuilder: (context, index) {
                       final booking = recentBookings[index];
-                      return _BookingCard(booking: booking);
+                      return FadeListItem(
+                        index: index,
+                        child: HoverWidget(
+                          child: _BookingCard(booking: booking),
+                        ),
+                      );
                     },
                   );
                 },
@@ -361,8 +388,9 @@ class ClientHomePage extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }
 
 class _CategoryCard extends StatelessWidget {
@@ -377,17 +405,17 @@ class _CategoryCard extends StatelessWidget {
     return Container(
       width: 20.w,
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceVariant,
+        color: theme.colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            width: 12.w,
-            height: 12.w,
+            width: 8.h,
+            height: 8.h,
             decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withOpacity(0.1),
+              color: theme.colorScheme.primary.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Center(
@@ -421,109 +449,137 @@ class _ServiceCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Container(
-      width: 75.w,
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: theme.shadowColor.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Stack(
-            children: [
-              ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                child: CustomImageWidget(
-                  imageUrl: service['image'],
-                  width: 75.w,
-                  height: 16.h,
-                  fit: BoxFit.cover,
-                  semanticLabel: service['title'],
-                ),
-              ),
-              Positioned(
-                top: 1.h,
-                right: 2.w,
-                child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 3.w, vertical: 0.5.h),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.error,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    service['discount'],
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: theme.colorScheme.onError,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          Padding(
-            padding: EdgeInsets.all(3.w),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    return InkWell(
+      onTap: () {
+        // Create a temporary ProductModel from the map for the booking screen
+        // In a real app, you'd fetch the full model or pass it directly
+        try {
+          final product = ProductModel(
+            id: 'temp_${service['title']}', // Temporary ID since we use mock data here
+            title: service['title'],
+            description: service['description'],
+            price: double.parse(service['price'].replaceAll(RegExp(r'[^0-9.]'), '')),
+            category: 'General',
+            imageUrls: [service['image']],
+            createdBy: 'admin', // Required field
+            providerId: 'admin',
+            createdAt: DateTime.now(),
+          );
+          
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => BookingFormScreen(product: product),
+            ),
+          );
+        } catch (e) {
+          print('Error navigating to booking: $e');
+        }
+      },
+      child: Container(
+        width: 280, // Fixed width helps on web and mobile lists
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: theme.shadowColor.withValues(alpha: 0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Stack(
               children: [
-                Text(
-                  service['title'],
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
+                ClipRRect(
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                  child: CustomImageWidget(
+                    imageUrl: service['image'],
+                    width: 280,
+                    height: 16.h,
+                    fit: BoxFit.cover,
+                    semanticLabel: service['title'],
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
-                SizedBox(height: 0.5.h),
-                Text(
-                  service['description'],
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                SizedBox(height: 1.h),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        CustomIconWidget(
-                          iconName: 'star',
-                          color: Colors.amber,
-                          size: 16,
-                        ),
-                        SizedBox(width: 1.w),
-                        Text(
-                          service['rating'].toString(),
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
+                Positioned(
+                  top: 1.h,
+                  right: 2.w,
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 3.w, vertical: 0.5.h),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.error,
+                      borderRadius: BorderRadius.circular(20),
                     ),
-                    Text(
-                      service['price'],
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        color: theme.colorScheme.primary,
-                        fontWeight: FontWeight.w700,
+                    child: Text(
+                      service['discount'],
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.onError,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                  ],
+                  ),
                 ),
               ],
             ),
-          ),
-        ],
+            Padding(
+              padding: EdgeInsets.all(3.w),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    service['title'],
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  SizedBox(height: 0.5.h),
+                  Text(
+                    service['description'],
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  SizedBox(height: 1.h),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          CustomIconWidget(
+                            iconName: 'star',
+                            color: Colors.amber,
+                            size: 16,
+                          ),
+                          SizedBox(width: 1.w),
+                          Text(
+                            service['rating'].toString(),
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Text(
+                        service['price'],
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -544,7 +600,7 @@ class _BookingCard extends StatelessWidget {
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: theme.colorScheme.outline.withOpacity(0.2),
+          color: theme.colorScheme.outline.withValues(alpha: 0.2),
         ),
       ),
       child: Row(
@@ -553,7 +609,7 @@ class _BookingCard extends StatelessWidget {
             width: 12.w,
             height: 12.w,
             decoration: BoxDecoration(
-              color: _getStatusColor(booking.status).withOpacity(0.1),
+              color: _getStatusColor(booking.status).withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Center(
@@ -684,11 +740,178 @@ class ClientMessagesPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final authProvider = context.watch<AuthProvider>();
+    
+    // Mock conversations for now - in production, fetch from ChatProvider
+    final conversations = [
+      {
+        'name': 'John\'s Cleaning Services',
+        'lastMessage': 'Your appointment is confirmed for tomorrow at 2 PM',
+        'time': '2 min ago',
+        'unread': 2,
+        'avatar': 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100',
+      },
+      {
+        'name': 'ProPlumb Experts',
+        'lastMessage': 'Thank you for your booking!',
+        'time': '1 hour ago',
+        'unread': 0,
+        'avatar': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100',
+      },
+      {
+        'name': 'ElectriCare',
+        'lastMessage': 'The technician is on the way',
+        'time': 'Yesterday',
+        'unread': 0,
+        'avatar': 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100',
+      },
+    ];
+    
     return Scaffold(
-      appBar: AppBar(title: const Text('Messages')),
-      body: const Center(
-        child: Text('Messages - Coming Soon'),
+      appBar: AppBar(
+        title: const Text('Messages'),
+        actions: [
+          IconButton(
+            icon: const CustomIconWidget(iconName: 'search'),
+            onPressed: () {},
+          ),
+        ],
       ),
+      body: conversations.isEmpty
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CustomIconWidget(
+                    iconName: 'chat_bubble_outline',
+                    color: theme.colorScheme.onSurfaceVariant,
+                    size: 80,
+                  ),
+                  SizedBox(height: 2.h),
+                  Text(
+                    'No messages yet',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: 1.h),
+                  Text(
+                    'Start a conversation by booking a service',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            )
+          : ListView.builder(
+              padding: EdgeInsets.symmetric(vertical: 1.h),
+              itemCount: conversations.length,
+              itemBuilder: (context, index) {
+                final conv = conversations[index];
+                return FadeListItem(
+                  index: index,
+                  child: HoverWidget(
+                    child: ScaleButton(
+                      onTap: () {
+                        // Navigate to chat screen
+                      },
+                      child: Container(
+                        padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
+                        decoration: BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(
+                              color: theme.dividerColor.withValues(alpha: 0.3),
+                            ),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            // Avatar with unread indicator
+                            Stack(
+                              children: [
+                                CircleAvatar(
+                                  radius: 28,
+                                  backgroundImage: NetworkImage(conv['avatar'] as String),
+                                ),
+                                if ((conv['unread'] as int) > 0)
+                                  Positioned(
+                                    right: 0,
+                                    top: 0,
+                                    child: Container(
+                                      padding: const EdgeInsets.all(6),
+                                      decoration: BoxDecoration(
+                                        color: theme.colorScheme.primary,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Text(
+                                        '${conv['unread']}',
+                                        style: theme.textTheme.labelSmall?.copyWith(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                            SizedBox(width: 4.w),
+                            // Content
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          conv['name'] as String,
+                                          style: theme.textTheme.titleMedium?.copyWith(
+                                            fontWeight: (conv['unread'] as int) > 0
+                                                ? FontWeight.bold
+                                                : FontWeight.w500,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                      Text(
+                                        conv['time'] as String,
+                                        style: theme.textTheme.bodySmall?.copyWith(
+                                          color: (conv['unread'] as int) > 0
+                                              ? theme.colorScheme.primary
+                                              : theme.colorScheme.onSurfaceVariant,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  SizedBox(height: 0.5.h),
+                                  Text(
+                                    conv['lastMessage'] as String,
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      color: (conv['unread'] as int) > 0
+                                          ? theme.colorScheme.onSurface
+                                          : theme.colorScheme.onSurfaceVariant,
+                                      fontWeight: (conv['unread'] as int) > 0
+                                          ? FontWeight.w500
+                                          : FontWeight.normal,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
     );
   }
 }
@@ -698,24 +921,241 @@ class ClientProfilePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    
     return Scaffold(
       appBar: AppBar(
         title: const Text('Profile'),
         actions: [
           IconButton(
-            icon: const CustomIconWidget(iconName: 'logout'),
-            onPressed: () async {
-              final authProvider = context.read<AuthProvider>();
-              await authProvider.signOut();
-              if (context.mounted) {
-                AppRouter.navigateToLogin(context);
-              }
+            icon: const CustomIconWidget(iconName: 'settings'),
+            onPressed: () {
+              // Navigate to settings
             },
           ),
         ],
       ),
-      body: const Center(
-        child: Text('Profile - Coming Soon'),
+      body: Consumer<AuthProvider>(
+        builder: (context, authProvider, child) {
+          return SingleChildScrollView(
+            padding: EdgeInsets.all(4.w),
+            child: Column(
+              children: [
+                // Profile Header
+                Container(
+                  padding: EdgeInsets.all(6.w),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        theme.colorScheme.primary,
+                        theme.colorScheme.primary.withValues(alpha: 0.7),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Column(
+                    children: [
+                      // Avatar
+                      CircleAvatar(
+                        radius: 50,
+                        backgroundColor: Colors.white,
+                        backgroundImage: authProvider.userPhotoUrl != null
+                            ? NetworkImage(authProvider.userPhotoUrl!)
+                            : null,
+                        child: authProvider.userPhotoUrl == null
+                            ? Text(
+                                authProvider.userName?.substring(0, 1).toUpperCase() ?? 'U',
+                                style: theme.textTheme.headlineLarge?.copyWith(
+                                  color: theme.colorScheme.primary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              )
+                            : null,
+                      ),
+                      SizedBox(height: 2.h),
+                      Text(
+                        authProvider.userName ?? 'User',
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(height: 0.5.h),
+                      Text(
+                        authProvider.userEmail ?? '',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: Colors.white.withValues(alpha: 0.9),
+                        ),
+                      ),
+                      SizedBox(height: 2.h),
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.h),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          'Client Account',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                
+                SizedBox(height: 3.h),
+                
+                // Profile Options
+                _ProfileOption(
+                  icon: 'person',
+                  title: 'Edit Profile',
+                  subtitle: 'Update your personal information',
+                  onTap: () {},
+                ),
+                _ProfileOption(
+                  icon: 'history',
+                  title: 'Booking History',
+                  subtitle: 'View your past bookings',
+                  onTap: () {},
+                ),
+                _ProfileOption(
+                  icon: 'payment',
+                  title: 'Payment Methods',
+                  subtitle: 'Manage your payment options',
+                  onTap: () {},
+                ),
+                _ProfileOption(
+                  icon: 'notifications',
+                  title: 'Notifications',
+                  subtitle: 'Configure notification settings',
+                  onTap: () {},
+                ),
+                _ProfileOption(
+                  icon: 'help',
+                  title: 'Help & Support',
+                  subtitle: 'Get help or contact us',
+                  onTap: () {},
+                ),
+                
+                SizedBox(height: 3.h),
+                
+                // Logout Button
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: OutlinedButton.icon(
+                    onPressed: () async {
+                      final authProvider = context.read<AuthProvider>();
+                      await authProvider.signOut();
+                      if (context.mounted) {
+                        AppRouter.navigateToLogin(context);
+                      }
+                    },
+                    icon: const CustomIconWidget(iconName: 'logout', color: Colors.red),
+                    label: Text(
+                      'Log Out',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: Colors.red,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Colors.red),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ),
+                
+                SizedBox(height: 2.h),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _ProfileOption extends StatelessWidget {
+  final String icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  const _ProfileOption({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    
+    return HoverWidget(
+      child: ScaleButton(
+        onTap: onTap,
+        child: Container(
+          margin: EdgeInsets.only(bottom: 2.h),
+          padding: EdgeInsets.all(4.w),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: theme.colorScheme.outline.withValues(alpha: 0.2),
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: EdgeInsets.all(3.w),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: CustomIconWidget(
+                  iconName: icon,
+                  color: theme.colorScheme.primary,
+                  size: 24,
+                ),
+              ),
+              SizedBox(width: 4.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    SizedBox(height: 0.5.h),
+                    Text(
+                      subtitle,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              CustomIconWidget(
+                iconName: 'chevron_right',
+                color: theme.colorScheme.onSurfaceVariant,
+                size: 24,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sizer/sizer.dart';
 import '../../core/theme.dart';
+import '../../core/utils/animations.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/booking_provider.dart';
 import '../../routing/app_router.dart';
@@ -84,7 +85,7 @@ class EmployeeHomePage extends StatelessWidget {
                   gradient: LinearGradient(
                     colors: [
                       theme.colorScheme.primary,
-                      theme.colorScheme.primary.withOpacity(0.8),
+                      theme.colorScheme.primary.withValues(alpha: 0.8),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -110,7 +111,7 @@ class EmployeeHomePage extends StatelessWidget {
                             Text(
                               'Ready to complete your assigned jobs?',
                               style: theme.textTheme.bodyMedium?.copyWith(
-                                color: Colors.white.withOpacity(0.9),
+                                color: Colors.white.withValues(alpha: 0.9),
                               ),
                             ),
                           ],
@@ -127,26 +128,32 @@ class EmployeeHomePage extends StatelessWidget {
                     ),
                     SizedBox(height: 4.h),
                     // Stats Cards
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _StatCard(
-                            title: 'Active Jobs',
-                            value: '3',
-                            iconName: 'work',
-                            color: AppTheme.primaryColor,
-                          ),
-                        ),
-                        SizedBox(width: 3.w),
-                        Expanded(
-                          child: _StatCard(
-                            title: 'Completed',
-                            value: '12',
-                            iconName: 'check_circle',
-                            color: AppTheme.successColor,
-                          ),
-                        ),
-                      ],
+                    Consumer<BookingProvider>(
+                      builder: (context, bookingProvider, _) {
+                        final activeCount = bookingProvider.bookings.where((b) => b.status == 'active' || b.status == 'assigned').length;
+                        final completedCount = bookingProvider.bookings.where((b) => b.status == 'completed').length;
+                        return Row(
+                          children: [
+                            Expanded(
+                              child: _StatCard(
+                                title: 'Active Jobs',
+                                value: activeCount.toString(),
+                                iconName: 'work',
+                                color: AppTheme.primaryColor,
+                              ),
+                            ),
+                            SizedBox(width: 3.w),
+                            Expanded(
+                              child: _StatCard(
+                                title: 'Completed',
+                                value: completedCount.toString(),
+                                iconName: 'check_circle',
+                                color: AppTheme.successColor,
+                              ),
+                            ),
+                          ],
+                        );
+                      },
                     ),
                   ],
                 ),
@@ -159,7 +166,7 @@ class EmployeeHomePage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Today\'s Jobs',
+                      'Priority Jobs',
                       style: theme.textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -233,10 +240,10 @@ class _StatCard extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(4.w),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
+        color: Colors.white.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Colors.white.withOpacity(0.3),
+          color: Colors.white.withValues(alpha: 0.3),
           width: 1,
         ),
       ),
@@ -264,7 +271,7 @@ class _StatCard extends StatelessWidget {
           Text(
             title,
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: Colors.white.withOpacity(0.9),
+              color: Colors.white.withValues(alpha: 0.9),
             ),
           ),
         ],
@@ -273,155 +280,185 @@ class _StatCard extends StatelessWidget {
   }
 }
 
-class TodaysJobsSection extends StatelessWidget {
+class TodaysJobsSection extends StatefulWidget {
   const TodaysJobsSection({super.key});
+
+  @override
+  State<TodaysJobsSection> createState() => _TodaysJobsSectionState();
+}
+
+class _TodaysJobsSectionState extends State<TodaysJobsSection> {
+  @override
+  void initState() {
+    super.initState();
+    // Fetch bookings for employee on load
+    final authProvider = context.read<AuthProvider>();
+    if (authProvider.user != null) {
+      context.read<BookingProvider>().initializeBookings(authProvider.user!.uid, 'employee');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    // Mock today's jobs
-    final jobs = [
-      MockJob(
-        id: '1',
-        title: 'House Cleaning',
-        clientName: 'John Doe',
-        address: '123 Main St, City',
-        time: '10:00 AM',
-        status: 'Pending',
-        statusColor: AppTheme.warningColor,
-      ),
-      MockJob(
-        id: '2',
-        title: 'Plumbing Repair',
-        clientName: 'Jane Smith',
-        address: '456 Oak Ave, City',
-        time: '2:00 PM',
-        status: 'In Progress',
-        statusColor: AppTheme.primaryColor,
-      ),
-      MockJob(
-        id: '3',
-        title: 'Garden Maintenance',
-        clientName: 'Bob Johnson',
-        address: '789 Pine St, City',
-        time: '4:00 PM',
-        status: 'Scheduled',
-        statusColor: AppTheme.secondaryColor,
-      ),
-    ];
+    
+    return Consumer<BookingProvider>(
+      builder: (context, bookingProvider, child) {
+        if (bookingProvider.isLoading && bookingProvider.bookings.isEmpty) {
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(20),
+              child: CircularProgressIndicator(),
+            ),
+          );
+        }
 
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: theme.shadowColor.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+        final jobs = bookingProvider.bookings.where((b) => b.status != 'completed' && b.status != 'cancelled').toList();
+
+        if (jobs.isEmpty) {
+          return Center(
+            child: Padding(
+              padding: EdgeInsets.all(4.w),
+              child: Text(
+                'No active jobs at the moment',
+                 style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey),
+              ),
+            ),
+          );
+        }
+
+        return Container(
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surface,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: theme.shadowColor.withValues(alpha: 0.1),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: ListView.separated(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: jobs.length,
-        separatorBuilder: (context, index) => Divider(
-          color: theme.dividerColor,
-          height: 1,
-        ),
-        itemBuilder: (context, index) {
-          final job = jobs[index];
-          return ListTile(
-            contentPadding: EdgeInsets.all(4.w),
-            leading: Container(
-              width: 12.w,
-              height: 12.w,
-              decoration: BoxDecoration(
-                color: job.statusColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Center(
-                child: CustomIconWidget(
-                  iconName: 'work',
-                  color: job.statusColor,
-                  size: 6.w,
-                ),
-              ),
+          child: ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: jobs.length,
+            separatorBuilder: (context, index) => Divider(
+              color: theme.dividerColor,
+              height: 1,
             ),
-            title: Text(
-              job.title,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(height: 0.5.h),
-                Text(
-                  'Client: ${job.clientName}',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
+            itemBuilder: (context, index) {
+              final job = jobs[index];
+              return FadeListItem(
+                index: index,
+                child: HoverWidget(
+                  child: ListTile(
+                contentPadding: EdgeInsets.all(4.w),
+                leading: Container(
+                  width: 12.w,
+                  height: 12.w,
+                  decoration: BoxDecoration(
+                    color: _getStatusColor(job.status).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                ),
-                Text(
-                  job.address,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                SizedBox(height: 1.h),
-                Row(
-                  children: [
-                    CustomIconWidget(
-                      iconName: 'schedule',
-                      color: theme.colorScheme.onSurfaceVariant,
-                      size: 3.w,
+                  child: Center(
+                    child: CustomIconWidget(
+                      iconName: 'work',
+                      color: _getStatusColor(job.status),
+                      size: 6.w,
                     ),
-                    SizedBox(width: 1.w),
+                  ),
+                ),
+                title: Text(
+                  job.productTitle ?? 'Service',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(height: 0.5.h),
                     Text(
-                      job.time,
+                      'Client: ${job.clientName ?? 'Unknown'}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    if (job.address != null)
+                    Text(
+                      job.address!,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ],
                 ),
-              ],
-            ),
-            trailing: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 3.w, vertical: 1.w),
-                  decoration: BoxDecoration(
-                    color: job.statusColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    job.status,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: job.statusColor,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+                trailing: _buildJobAction(context, job, bookingProvider),
+                onTap: () {
+                  // Navigate to job details
+                },
+              ),
                 ),
-                SizedBox(height: 1.h),
-                CustomIconWidget(
-                  iconName: 'arrow_forward',
-                  color: theme.colorScheme.onSurfaceVariant,
-                  size: 4.w,
-                ),
-              ],
-            ),
-            onTap: () {
-              // Navigate to job details
+              );
             },
-          );
-        },
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildJobAction(BuildContext context, dynamic job, BookingProvider provider) {
+    if (job.status == 'assigned') {
+      return ScaleButton(
+        onTap: () => provider.updateBookingStatus(job.id, 'active'),
+        child: Container(
+          padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.w),
+          decoration: BoxDecoration(
+            color: Colors.green,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: const Text('Start', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        ),
+      );
+    } else if (job.status == 'active') {
+      return ScaleButton(
+        onTap: () => provider.updateBookingStatus(job.id, 'completed'),
+        child: Container(
+          padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.w),
+          decoration: BoxDecoration(
+            color: AppTheme.primaryColor,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: const Text('Done', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        ),
+      );
+    }
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 3.w, vertical: 1.w),
+      decoration: BoxDecoration(
+        color: _getStatusColor(job.status).withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        job.status.toUpperCase(),
+        style: TextStyle(
+          color: _getStatusColor(job.status),
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'pending': return AppTheme.warningColor;
+      case 'assigned': return Colors.blue;
+      case 'active': return Colors.green;
+      case 'completed': return AppTheme.successColor;
+      default: return Colors.grey;
+    }
   }
 }
 
@@ -432,35 +469,35 @@ class EmployeeQuickActions extends StatelessWidget {
   Widget build(BuildContext context) {
     final actions = [
       QuickAction(
-        title: 'Start Job',
-        iconName: 'play_arrow',
+        title: 'Route to Job',
+        iconName: 'directions',
         color: AppTheme.successColor,
         onTap: () {
-          // Start job action
+          // Future: Maps integration
         },
       ),
       QuickAction(
-        title: 'Update Status',
-        iconName: 'update',
+        title: 'Check Schedule',
+        iconName: 'calendar_month',
         color: AppTheme.primaryColor,
         onTap: () {
-          // Update status action
+          // Future: Calendar view
         },
       ),
       QuickAction(
-        title: 'Contact Client',
+        title: 'Messages',
         iconName: 'message',
         color: AppTheme.secondaryColor,
         onTap: () {
-          // Contact client action
+          // Future: Messaging
         },
       ),
       QuickAction(
-        title: 'Report Issue',
-        iconName: 'report_problem',
+        title: 'Support',
+        iconName: 'help_outline',
         color: AppTheme.warningColor,
         onTap: () {
-          // Report issue action
+          // Future: Support ticket
         },
       ),
     ];
@@ -493,12 +530,12 @@ class _QuickActionCard extends StatelessWidget {
           color: theme.colorScheme.surface,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: action.color.withOpacity(0.2),
+            color: action.color.withValues(alpha: 0.2),
             width: 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: theme.shadowColor.withOpacity(0.1),
+              color: theme.shadowColor.withValues(alpha: 0.1),
               blurRadius: 4,
               offset: const Offset(0, 2),
             ),
@@ -509,7 +546,7 @@ class _QuickActionCard extends StatelessWidget {
             Container(
               padding: EdgeInsets.all(2.w),
               decoration: BoxDecoration(
-                color: action.color.withOpacity(0.1),
+                color: action.color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: CustomIconWidget(
@@ -554,7 +591,7 @@ class RecentActivitySection extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: theme.shadowColor.withOpacity(0.1),
+            color: theme.shadowColor.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -571,7 +608,7 @@ class RecentActivitySection extends StatelessWidget {
         itemBuilder: (context, index) {
           return ListTile(
             leading: CircleAvatar(
-              backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
+              backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
               child: CustomIconWidget(
                 iconName: 'notifications',
                 color: theme.colorScheme.primary,
@@ -716,7 +753,7 @@ class EmployeeProfilePage extends StatelessWidget {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: theme.shadowColor.withOpacity(0.1),
+                    color: theme.shadowColor.withValues(alpha: 0.1),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -747,7 +784,7 @@ class EmployeeProfilePage extends StatelessWidget {
                   Container(
                     padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.h),
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.secondary.withOpacity(0.1),
+                      color: theme.colorScheme.secondary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
@@ -769,7 +806,7 @@ class EmployeeProfilePage extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    color: theme.shadowColor.withOpacity(0.1),
+                    color: theme.shadowColor.withValues(alpha: 0.1),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),

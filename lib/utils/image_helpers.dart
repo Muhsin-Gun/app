@@ -99,46 +99,39 @@ class ImageHelpers {
   }
 
   // Crop image
-  static Future<CroppedFile?> cropImage(String imagePath) async {
+  static Future<CroppedFile?> cropImage(BuildContext context, String imagePath) async {
     try {
       AppConfig.log('Cropping image: $imagePath');
       
       final croppedFile = await ImageCropper().cropImage(
         sourcePath: imagePath,
-        aspectRatioPresets: [
-          CropAspectRatioPreset.square,
-          CropAspectRatioPreset.ratio3x2,
-          CropAspectRatioPreset.original,
-          CropAspectRatioPreset.ratio4x3,
-          CropAspectRatioPreset.ratio16x9,
-        ],
         uiSettings: [
           AndroidUiSettings(
             toolbarTitle: 'Crop Image',
-            toolbarColor: Colors.deepOrange,
+            toolbarColor: Theme.of(context).primaryColor,
             toolbarWidgetColor: Colors.white,
             initAspectRatio: CropAspectRatioPreset.original,
             lockAspectRatio: false,
+            aspectRatioPresets: [
+              CropAspectRatioPreset.square,
+              CropAspectRatioPreset.ratio3x2,
+              CropAspectRatioPreset.original,
+              CropAspectRatioPreset.ratio4x3,
+              CropAspectRatioPreset.ratio16x9,
+            ],
           ),
           IOSUiSettings(
             title: 'Crop Image',
-            minimumAspectRatio: 1.0,
+            aspectRatioPresets: [
+              CropAspectRatioPreset.square,
+              CropAspectRatioPreset.ratio3x2,
+              CropAspectRatioPreset.original,
+              CropAspectRatioPreset.ratio4x3,
+              CropAspectRatioPreset.ratio16x9,
+            ],
           ),
           WebUiSettings(
-            context: null, // Will be handled by the cropper
-            presentStyle: CropperPresentStyle.dialog,
-            boundary: const CroppieBoundary(
-              width: 520,
-              height: 520,
-            ),
-            viewPort: const CroppieViewPort(
-              width: 480,
-              height: 480,
-              type: 'circle',
-            ),
-            enableExif: true,
-            enableZoom: true,
-            showZoomer: true,
+            context: context,
           ),
         ],
       );

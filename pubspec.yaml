@@ -26,6 +26,9 @@ dependencies:
   image_picker: ^1.2.1
   image_cropper: ^11.0.0
   cached_network_image: ^3.4.1
+  blurhash: ^1.2.0
+  intl: ^0.20.2
+  flutter_animate: ^4.5.2
   
   # HTTP & Networking
   http: ^1.6.0

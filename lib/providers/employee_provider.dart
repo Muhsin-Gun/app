@@ -13,7 +13,7 @@ class EmployeeProvider extends ChangeNotifier {
   List<UserModel> _employees = [];
   List<UserModel> _filteredEmployees = [];
   Map<String, List<BookingModel>> _employeeBookings = {};
-  Map<String, Map<String, dynamic>> _employeeStatistics = {};
+  final Map<String, Map<String, dynamic>> _employeeStatistics = {};
   bool _isLoading = false;
   String? _errorMessage;
   String _searchQuery = '';

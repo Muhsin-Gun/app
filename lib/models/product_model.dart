@@ -18,6 +18,7 @@ class ProductModel {
   final int reviewCount;
   final String? duration;
   final bool isAvailable;
+  final String? providerId;
 
   ProductModel({
     required this.id,
@@ -36,6 +37,7 @@ class ProductModel {
     this.reviewCount = 0,
     this.duration,
     this.isAvailable = true,
+    this.providerId,
   });
 
   // Convert ProductModel to Map for Firestore
@@ -57,6 +59,7 @@ class ProductModel {
       'reviewCount': reviewCount,
       'duration': duration,
       'isAvailable': isAvailable,
+      'providerId': providerId,
     };
   }
 
@@ -79,6 +82,7 @@ class ProductModel {
       reviewCount: map['reviewCount'] ?? 0,
       duration: map['duration'],
       isAvailable: map['isAvailable'] ?? true,
+      providerId: map['providerId'],
     );
   }
 
@@ -107,6 +111,7 @@ class ProductModel {
     int? reviewCount,
     String? duration,
     bool? isAvailable,
+    String? providerId,
   }) {
     return ProductModel(
       id: id ?? this.id,
@@ -125,6 +130,7 @@ class ProductModel {
       reviewCount: reviewCount ?? this.reviewCount,
       duration: duration ?? this.duration,
       isAvailable: isAvailable ?? this.isAvailable,
+      providerId: providerId ?? this.providerId,
     );
   }
 

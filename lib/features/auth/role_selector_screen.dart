@@ -50,10 +50,10 @@ class _RoleSelectorScreenState extends State<RoleSelectorScreen> {
               Container(
                 padding: EdgeInsets.all(6.w),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primaryContainer.withOpacity(0.3),
+                  color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: theme.colorScheme.primary.withOpacity(0.3),
+                    color: theme.colorScheme.primary.withValues(alpha: 0.3),
                   ),
                 ),
                 child: Column(
@@ -88,7 +88,7 @@ class _RoleSelectorScreenState extends State<RoleSelectorScreen> {
 
               // Back to Login Button
               SizedBox(
-                height: 6.h,
+                height: 48, // Fixed height for web compatibility
                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.of(context).pushReplacementNamed('/login');

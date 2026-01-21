@@ -199,7 +199,6 @@ class CustomIconWidget extends StatelessWidget {
       case 'check_circle':
         return Icons.check_circle;
       case 'cancelled':
-      case 'cancel':
         return Icons.cancel;
       case 'error':
         return Icons.error;

@@ -17,6 +17,7 @@ class AuthProvider extends ChangeNotifier {
   bool _isInitialized = false;
 
   // Getters
+  User? get user => _firebaseUser; // Added getter
   User? get firebaseUser => _firebaseUser;
   UserModel? get userModel => _userModel;
   UserModel? get currentUser => _userModel; // Added for compatibility

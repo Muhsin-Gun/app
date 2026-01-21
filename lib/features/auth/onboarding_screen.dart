@@ -134,7 +134,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           boxShadow: isSelected
                               ? [
                                   BoxShadow(
-                                    color: theme.colorScheme.primary.withOpacity(0.2),
+                                    color: theme.colorScheme.primary.withValues(alpha: 0.2),
                                     blurRadius: 8,
                                     offset: const Offset(0, 4),
                                   ),
@@ -147,7 +147,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               width: 15.w,
                               height: 15.w,
                               decoration: BoxDecoration(
-                                color: option.color.withOpacity(0.1),
+                                color: option.color.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Center(
@@ -177,7 +177,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                     option.description,
                                     style: theme.textTheme.bodyMedium?.copyWith(
                                       color: isSelected
-                                          ? theme.colorScheme.onPrimaryContainer.withOpacity(0.8)
+                                          ? theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.8)
                                           : theme.colorScheme.onSurfaceVariant,
                                     ),
                                   ),
@@ -202,7 +202,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
               // Continue Button
               SizedBox(
-                height: 6.h,
+                height: 48, // Fixed height for web compatibility
                 child: ElevatedButton(
                   onPressed: _selectedRole != null && !_isLoading
                       ? _completeOnboarding

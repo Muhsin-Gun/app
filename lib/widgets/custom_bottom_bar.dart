@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
-import '../core/theme.dart';
+import '../core/app_colors.dart';
 import 'custom_icon_widget.dart';
 
 // Admin Bottom Navigation Bar
@@ -46,7 +46,7 @@ class AdminBottomBar extends StatelessWidget {
         color: theme.colorScheme.surface,
         boxShadow: [
           BoxShadow(
-            color: theme.shadowColor.withOpacity(0.1),
+            color: theme.shadowColor.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, -2),
           ),
@@ -72,7 +72,7 @@ class AdminBottomBar extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: isSelected 
-                        ? theme.colorScheme.primary.withOpacity(0.1)
+                        ? theme.colorScheme.primary.withValues(alpha: 0.1)
                         : Colors.transparent,
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -153,7 +153,7 @@ class ClientBottomBar extends StatelessWidget {
         color: theme.colorScheme.surface,
         boxShadow: [
           BoxShadow(
-            color: theme.shadowColor.withOpacity(0.1),
+            color: theme.shadowColor.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, -2),
           ),
@@ -179,7 +179,7 @@ class ClientBottomBar extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: isSelected 
-                        ? theme.colorScheme.primary.withOpacity(0.1)
+                        ? theme.colorScheme.primary.withValues(alpha: 0.1)
                         : Colors.transparent,
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -256,7 +256,7 @@ class EmployeeBottomBar extends StatelessWidget {
         color: theme.colorScheme.surface,
         boxShadow: [
           BoxShadow(
-            color: theme.shadowColor.withOpacity(0.1),
+            color: theme.shadowColor.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, -2),
           ),
@@ -282,7 +282,7 @@ class EmployeeBottomBar extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: isSelected 
-                        ? theme.colorScheme.primary.withOpacity(0.1)
+                        ? theme.colorScheme.primary.withValues(alpha: 0.1)
                         : Colors.transparent,
                     borderRadius: BorderRadius.circular(12),
                   ),

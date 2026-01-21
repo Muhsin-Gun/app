@@ -38,7 +38,7 @@ class AppTheme {
         onSurface: textPrimaryColor,
         onBackground: textPrimaryColor,
         outline: borderColor,
-        surfaceVariant: Color(0xFFF1F5F9),
+        surfaceContainerHighest: Color(0xFFF1F5F9),
         onSurfaceVariant: textSecondaryColor,
       ),
       
@@ -239,7 +239,7 @@ class AppTheme {
       
       chipTheme: ChipThemeData(
         backgroundColor: const Color(0xFFF1F5F9),
-        selectedColor: primaryColor.withOpacity(0.1),
+        selectedColor: primaryColor.withValues(alpha: 0.1),
         labelStyle: GoogleFonts.inter(
           fontSize: 12,
           fontWeight: FontWeight.w500,
@@ -280,7 +280,7 @@ class AppTheme {
         onSurface: Colors.white,
         onBackground: Colors.white,
         outline: Color(0xFF334155),
-        surfaceVariant: Color(0xFF334155),
+        surfaceContainerHighest: Color(0xFF334155),
         onSurfaceVariant: Color(0xFF94A3B8),
       ),
       

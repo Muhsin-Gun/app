@@ -65,7 +65,7 @@ class _ClientBookingsScreenState extends State<ClientBookingsScreen>
                 color: theme.colorScheme.surface,
                 boxShadow: [
                   BoxShadow(
-                    color: theme.shadowColor.withOpacity(0.1),
+                    color: theme.shadowColor.withValues(alpha: 0.1),
                     blurRadius: 4,
                     offset: const Offset(0, 2),
                   ),
@@ -213,7 +213,7 @@ class BookingCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: theme.shadowColor.withOpacity(0.1),
+              color: theme.shadowColor.withValues(alpha: 0.1),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -237,7 +237,7 @@ class BookingCard extends StatelessWidget {
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 3.w, vertical: 1.w),
                   decoration: BoxDecoration(
-                    color: _getStatusColor(booking.status).withOpacity(0.1),
+                    color: _getStatusColor(booking.status).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
@@ -409,7 +409,7 @@ class BookingDetailsScreen extends StatelessWidget {
               width: double.infinity,
               padding: EdgeInsets.all(4.w),
               decoration: BoxDecoration(
-                color: _getStatusColor(booking.status).withOpacity(0.1),
+                color: _getStatusColor(booking.status).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: _getStatusColor(booking.status),
@@ -525,7 +525,7 @@ class BookingDetailsScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: theme.shadowColor.withOpacity(0.1),
+            color: theme.shadowColor.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),

@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:sizer/sizer.dart';
-import '../../core/theme.dart';
+import 'package:provider/provider.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:intl/intl.dart';
+
+import '../../core/app_colors.dart';
+import '../../core/utils/animations.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/booking_provider.dart';
+import '../../core/widgets/responsive_wrapper.dart';
 import '../../widgets/custom_icon_widget.dart';
 import '../../widgets/custom_image_widget.dart';
 import '../../models/product_model.dart';
-import '../../services/booking_service.dart';
+import '../../models/booking_model.dart';
 
 class BookingFormScreen extends StatefulWidget {
   final ProductModel product;
@@ -24,9 +29,15 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
   final _addressController = TextEditingController();
   final _phoneController = TextEditingController();
   
-  DateTime? _selectedDate;
-  TimeOfDay? _selectedTime;
+  DateTime _selectedDate = DateTime.now().add(const Duration(days: 1));
+  String? _selectedTime;
   bool _isLoading = false;
+
+  final List<String> _timeSlots = [
+    '09:00 AM', '10:00 AM', '11:00 AM', 
+    '12:00 PM', '01:00 PM', '02:00 PM', 
+    '03:00 PM', '04:00 PM', '05:00 PM'
+  ];
 
   @override
   void dispose() {
@@ -36,149 +47,125 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
     super.dispose();
   }
 
-  Future<void> _selectDate() async {
-    final date = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now().add(const Duration(days: 1)),
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-    );
-    
-    if (date != null) {
-      setState(() {
-        _selectedDate = date;
-      });
-    }
-  }
-
-  Future<void> _selectTime() async {
-    final time = await showTimePicker(
-      context: context,
-      initialTime: const TimeOfDay(hour: 9, minute: 0),
-    );
-    
-    if (time != null) {
-      setState(() {
-        _selectedTime = time;
-      });
-    }
-  }
-
   Future<void> _submitBooking() async {
     if (!_formKey.currentState!.validate()) return;
-    if (_selectedDate == null || _selectedTime == null) {
-      _showErrorDialog('Please select date and time');
+    if (_selectedTime == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a time slot'))
+      );
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
     try {
       final authProvider = context.read<AuthProvider>();
       final bookingProvider = context.read<BookingProvider>();
       
       if (authProvider.currentUser == null) {
-        _showErrorDialog('Please sign in to book a service');
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please sign in')));
         return;
       }
 
+      // Parse time
+      final timeParts = _selectedTime!.split(' ');
+      final hourMin = timeParts[0].split(':');
+      int hour = int.parse(hourMin[0]);
+      int minute = int.parse(hourMin[1]);
+      if (timeParts[1] == 'PM' && hour != 12) hour += 12;
+      if (timeParts[1] == 'AM' && hour == 12) hour = 0;
+
       final scheduledDateTime = DateTime(
-        _selectedDate!.year,
-        _selectedDate!.month,
-        _selectedDate!.day,
-        _selectedTime!.hour,
-        _selectedTime!.minute,
+        _selectedDate.year,
+        _selectedDate.month,
+        _selectedDate.day,
+        hour,
+        minute,
       );
 
-      final bookingId = await BookingService().createBooking(
-        clientId: authProvider.currentUser!.uid,
+      final booking = BookingModel(
+        id: '',
+        clientId: authProvider.userId!,
         productId: widget.product.id,
-        clientName: authProvider.currentUser!.name,
-        productTitle: widget.product.title,
+        status: 'pending',
         scheduledDate: scheduledDateTime,
         notes: _notesController.text.trim(),
+        createdAt: DateTime.now(),
+        totalAmount: widget.product.price,
+        clientName: authProvider.userName ?? 'Client',
+        productTitle: widget.product.title,
         address: _addressController.text.trim(),
         phoneNumber: _phoneController.text.trim(),
-        totalAmount: widget.product.price,
+        statusHistory: ['pending'],
       );
 
-      if (bookingId != null && mounted) {
-        _showSuccessDialog();
-      } else {
-        _showErrorDialog('Failed to create booking. Please try again.');
+      final success = await bookingProvider.createBooking(booking);
+
+      if (success && mounted) {
+        _showSuccessAnimation();
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(bookingProvider.errorMessage ?? 'Booking failed'))
+        );
       }
     } catch (e) {
-      _showErrorDialog('An error occurred: ${e.toString()}');
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
     } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  void _showErrorDialog(String message) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Error'),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showSuccessDialog() {
+  void _showSuccessAnimation() {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: Row(
-          children: [
-            CustomIconWidget(
-              iconName: 'check_circle',
-              color: AppTheme.successColor,
-              size: 6.w,
-            ),
-            SizedBox(width: 2.w),
-            const Text('Booking Confirmed'),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Your booking for ${widget.product.title} has been confirmed.'),
-            SizedBox(height: 2.h),
-            Text(
-              'Date: ${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
-              style: const TextStyle(fontWeight: FontWeight.w600),
-            ),
-            Text(
-              'Time: ${_selectedTime!.format(context)}',
-              style: const TextStyle(fontWeight: FontWeight.w600),
-            ),
-            SizedBox(height: 2.h),
-            const Text('You will receive updates about your booking status.'),
-          ],
-        ),
-        actions: [
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context); // Close dialog
-              Navigator.pop(context); // Go back to previous screen
-            },
-            child: const Text('OK'),
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        child: Padding(
+          padding: EdgeInsets.all(6.w),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.check_circle,
+                color: AppColors.success,
+                size: 64,
+                semanticLabel: 'Success',
+              ).animate()
+                  .scale(duration: 400.ms, curve: Curves.easeOutBack)
+                  .fadeIn()
+                  .shimmer(duration: 1.seconds),
+              SizedBox(height: 3.h),
+              Text(
+                'Booking Confirmed!',
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 1.h),
+              Text(
+                'We have received your request for ${widget.product.title}.',
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.grey),
+              ),
+              SizedBox(height: 4.h),
+              ScaleButton(
+                onTap: () {
+                  Navigator.pop(context); // Close dialog
+                  Navigator.pop(context); // Return to home
+                },
+                child: Container(
+                  width: double.infinity,
+                  height: 48,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Text('Great!', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -186,246 +173,153 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final authProvider = context.watch<AuthProvider>();
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Book Service'),
+        backgroundColor: Colors.transparent,
+        foregroundColor: Colors.black,
         elevation: 0,
       ),
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(4.w),
+        padding: EdgeInsets.symmetric(horizontal: 6.w),
         child: Form(
           key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Service Summary Card
-              Container(
-                padding: EdgeInsets.all(4.w),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surface,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: theme.shadowColor.withOpacity(0.1),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
+              SizedBox(height: 2.h),
+              // Header
+              Row(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: CustomImageWidget(
+                      imageUrl: widget.product.imageUrls.isNotEmpty ? widget.product.imageUrls.first : '',
+                      semanticLabel: 'Service image',
+                      width: 24.w,
+                      height: 24.w,
+                      fit: BoxFit.cover,
                     ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: CustomImageWidget(
-                        imageUrl: widget.product.imageUrls.isNotEmpty 
-                            ? widget.product.imageUrls.first 
-                            : '',
-                        width: 20.w,
-                        height: 20.w,
-                        fit: BoxFit.cover,
-                        semanticLabel: widget.product.title,
+                  ),
+                  SizedBox(width: 4.w),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(widget.product.title, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                        Text(widget.product.category, style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w500)),
+                        SizedBox(height: 1.h),
+                        Text('\$${widget.product.price.toStringAsFixed(2)}', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 4.h),
+
+              // Date Selector
+              const Text('Select Date', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              SizedBox(height: 2.h),
+              SizedBox(
+                height: 12.h,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: 14,
+                  itemBuilder: (context, index) {
+                    final date = DateTime.now().add(Duration(days: index + 1));
+                    final isSelected = date.day == _selectedDate.day && date.month == _selectedDate.month;
+                    
+                    return GestureDetector(
+                      onTap: () => setState(() => _selectedDate = date),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        margin: EdgeInsets.only(right: 3.w),
+                        width: 18.w,
+                        decoration: BoxDecoration(
+                          color: isSelected ? AppColors.primary : Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: isSelected ? [BoxShadow(color: AppColors.primary.withValues(alpha: 0.3), blurRadius: 8, offset: const Offset(0, 4))] : [],
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(DateFormat('EEE').format(date), style: TextStyle(color: isSelected ? Colors.white70 : Colors.grey, fontSize: 12)),
+                            Text(date.day.toString(), style: TextStyle(color: isSelected ? Colors.white : Colors.black, fontSize: 20, fontWeight: FontWeight.bold)),
+                          ],
+                        ),
                       ),
-                    ),
-                    SizedBox(width: 4.w),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            widget.product.title,
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          SizedBox(height: 1.h),
-                          Text(
-                            widget.product.category,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                          SizedBox(height: 1.h),
-                          Text(
-                            '\$${widget.product.price.toStringAsFixed(2)}',
-                            style: theme.textTheme.titleLarge?.copyWith(
-                              color: theme.colorScheme.primary,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                    );
+                  },
                 ),
               ),
 
               SizedBox(height: 4.h),
 
-              // Customer Information
-              Text(
-                'Customer Information',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              // Time Selector
+              const Text('Select Time', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               SizedBox(height: 2.h),
-
-              // Name (read-only)
-              TextFormField(
-                initialValue: authProvider.currentUser?.name ?? '',
-                enabled: false,
-                decoration: const InputDecoration(
-                  labelText: 'Name',
-                  prefixIcon: Icon(Icons.person),
-                ),
+              Wrap(
+                spacing: 3.w,
+                runSpacing: 1.5.h,
+                children: _timeSlots.map((time) {
+                  final isSelected = _selectedTime == time;
+                  return AppAnimations.scaleButton(
+                    isSelected ? 1.05 : 1.0,
+                    GestureDetector(
+                      onTap: () => setState(() => _selectedTime = time),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.2.h),
+                        decoration: BoxDecoration(
+                          color: isSelected ? AppColors.primary : Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: isSelected ? AppColors.primary : Colors.grey.shade300),
+                        ),
+                        child: Text(
+                          time,
+                          style: TextStyle(color: isSelected ? Colors.white : Colors.black, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal),
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
               ),
-              SizedBox(height: 2.h),
 
-              // Phone Number
+              SizedBox(height: 4.h),
+
+              // Contact Details
+              const Text('Personal Details', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              SizedBox(height: 2.h),
               TextFormField(
                 controller: _phoneController,
                 keyboardType: TextInputType.phone,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Phone Number',
-                  prefixIcon: Icon(Icons.phone),
-                  hintText: 'Enter your phone number',
+                  prefixIcon: const Icon(Icons.phone_outlined),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Please enter your phone number';
-                  }
-                  return null;
-                },
+                validator: (v) => v!.isEmpty ? 'Required' : null,
               ),
               SizedBox(height: 2.h),
-
-              // Address
               TextFormField(
                 controller: _addressController,
                 maxLines: 2,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Service Address',
-                  prefixIcon: Icon(Icons.location_on),
-                  hintText: 'Enter the address where service is needed',
+                  prefixIcon: const Icon(Icons.location_on_outlined),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Please enter the service address';
-                  }
-                  return null;
-                },
-              ),
-
-              SizedBox(height: 4.h),
-
-              // Scheduling
-              Text(
-                'Schedule Service',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                validator: (v) => v!.isEmpty ? 'Required' : null,
               ),
               SizedBox(height: 2.h),
-
-              // Date Selection
-              InkWell(
-                onTap: _selectDate,
-                child: Container(
-                  padding: EdgeInsets.all(4.w),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: theme.colorScheme.outline),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      CustomIconWidget(
-                        iconName: 'calendar_today',
-                        color: theme.colorScheme.onSurfaceVariant,
-                        size: 5.w,
-                      ),
-                      SizedBox(width: 3.w),
-                      Expanded(
-                        child: Text(
-                          _selectedDate != null
-                              ? '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}'
-                              : 'Select Date',
-                          style: theme.textTheme.bodyLarge?.copyWith(
-                            color: _selectedDate != null
-                                ? theme.colorScheme.onSurface
-                                : theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ),
-                      CustomIconWidget(
-                        iconName: 'arrow_drop_down',
-                        color: theme.colorScheme.onSurfaceVariant,
-                        size: 5.w,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              SizedBox(height: 2.h),
-
-              // Time Selection
-              InkWell(
-                onTap: _selectTime,
-                child: Container(
-                  padding: EdgeInsets.all(4.w),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: theme.colorScheme.outline),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      CustomIconWidget(
-                        iconName: 'access_time',
-                        color: theme.colorScheme.onSurfaceVariant,
-                        size: 5.w,
-                      ),
-                      SizedBox(width: 3.w),
-                      Expanded(
-                        child: Text(
-                          _selectedTime != null
-                              ? _selectedTime!.format(context)
-                              : 'Select Time',
-                          style: theme.textTheme.bodyLarge?.copyWith(
-                            color: _selectedTime != null
-                                ? theme.colorScheme.onSurface
-                                : theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ),
-                      CustomIconWidget(
-                        iconName: 'arrow_drop_down',
-                        color: theme.colorScheme.onSurfaceVariant,
-                        size: 5.w,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              SizedBox(height: 4.h),
-
-              // Additional Notes
-              Text(
-                'Additional Notes (Optional)',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              SizedBox(height: 2.h),
-
               TextFormField(
                 controller: _notesController,
                 maxLines: 3,
-                decoration: const InputDecoration(
-                  labelText: 'Special Instructions',
-                  hintText: 'Any specific requirements or instructions for the service provider',
-                  alignLabelWithHint: true,
+                decoration: InputDecoration(
+                  labelText: 'Special Notes (Optional)',
+                  prefixIcon: const Icon(Icons.notes_outlined),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 ),
               ),
 
@@ -435,64 +329,34 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
         ),
       ),
       bottomNavigationBar: Container(
-        padding: EdgeInsets.all(4.w),
+        padding: EdgeInsets.all(6.w),
         decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
-          boxShadow: [
-            BoxShadow(
-              color: theme.shadowColor.withOpacity(0.1),
-              blurRadius: 8,
-              offset: const Offset(0, -2),
-            ),
-          ],
+          color: Colors.white,
+          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, -5))],
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+        child: Row(
           children: [
-            // Total Amount
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Total Amount:',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                Text(
-                  '\$${widget.product.price.toStringAsFixed(2)}',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    color: theme.colorScheme.primary,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Total Price', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                  Text('\$${widget.product.price.toStringAsFixed(2)}', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.primary)),
+                ],
+              ),
             ),
-            SizedBox(height: 2.h),
-            // Book Button
-            SizedBox(
-              width: double.infinity,
-              height: 6.h,
-              child: ElevatedButton(
-                onPressed: _isLoading ? null : _submitBooking,
-                child: _isLoading
-                    ? SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            theme.colorScheme.onPrimary,
-                          ),
-                        ),
-                      )
-                    : const Text(
-                        'Confirm Booking',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+            ScaleButton(
+              onTap: _isLoading ? () {} : _submitBooking,
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 1.5.h),
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: _isLoading 
+                  ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                  : const Text('Confirm', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
               ),
             ),
           ],
