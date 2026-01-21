@@ -8,6 +8,7 @@ import '../features/admin/admin_dashboard_screen.dart';
 import '../features/client/client_dashboard_screen.dart';
 import '../features/employee/employee_dashboard_screen.dart';
 import '../features/profile/screens/provider_profile_screen.dart';
+import '../features/chat/screens/chat_screen.dart';
 
 class AppRouter {
   static const String loginRoute = '/LoginScreen';
@@ -17,6 +18,7 @@ class AppRouter {
   static const String adminDashboardRoute = '/admin-dashboard';
   static const String clientDashboardRoute = '/client-dashboard';
   static const String employeeDashboardRoute = '/employee-dashboard';
+  static const String chatRoute = '/chat';
 
   // Generate route based on settings
   static Route<dynamic>? generateRoute(RouteSettings settings) {
@@ -48,6 +50,16 @@ class AppRouter {
       case '/provider-profile':
         final args = settings.arguments as String;
         return _buildRoute(ProviderProfileScreen(providerId: args), settings);
+
+      case chatRoute:
+        final args = settings.arguments as Map<String, dynamic>;
+        return _buildRoute(
+          ChatScreen(
+            otherUserId: args['otherUserId'],
+            otherUserName: args['otherUserName'],
+          ),
+          settings,
+        );
         
       default:
         AppConfig.logError('Unknown route: ${settings.name}');

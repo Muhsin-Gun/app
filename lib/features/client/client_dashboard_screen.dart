@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sizer/sizer.dart';
-
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../core/theme.dart';
 import '../../core/utils/animations.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/product_provider.dart';
 import '../../providers/booking_provider.dart';
+import '../../providers/message_provider.dart';
 import '../../routing/app_router.dart';
 import '../../widgets/custom_icon_widget.dart';
 import '../../widgets/custom_bottom_bar.dart';
@@ -14,7 +15,10 @@ import '../../widgets/custom_image_widget.dart';
 import 'service_browse_screen.dart';
 import 'client_bookings_screen.dart';
 import 'booking_form_screen.dart';
+import 'service_details_screen.dart';
 import '../../models/product_model.dart';
+import '../../models/message_model.dart';
+import '../../models/user_model.dart';
 
 class ClientDashboardScreen extends StatefulWidget {
   const ClientDashboardScreen({super.key});
@@ -34,9 +38,7 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
   }
 
   void _onBottomNavTap(int index) {
-    setState(() {
-      _currentIndex = index;
-    });
+    setState(() => _currentIndex = index);
     _pageController.animateToPage(
       index,
       duration: const Duration(milliseconds: 300),
@@ -49,17 +51,13 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
     return Scaffold(
       body: PageView(
         controller: _pageController,
-        onPageChanged: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        children: const [
-          ClientHomePage(),
-          ClientBrowsePage(),
-          ClientBookingsPage(),
-          ClientMessagesPage(),
-          ClientProfilePage(),
+        onPageChanged: (index) => setState(() => _currentIndex = index),
+        children: [
+          ClientHomePage(onViewAll: () => _onBottomNavTap(1)),
+          const ClientBrowsePage(),
+          const ClientBookingsPage(),
+          const ClientMessagesPage(),
+          const ClientProfilePage(),
         ],
       ),
       bottomNavigationBar: ClientBottomBar(
@@ -71,510 +69,271 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
 }
 
 class ClientHomePage extends StatelessWidget {
-  const ClientHomePage({super.key});
+  final VoidCallback onViewAll;
+  const ClientHomePage({super.key, required this.onViewAll});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final authProvider = context.watch<AuthProvider>();
 
     return Scaffold(
       body: SafeArea(
         child: RefreshIndicator(
-          onRefresh: () async {
-            // Refresh data
-            await context.read<BookingProvider>().refreshBookings();
-          },
+          onRefresh: () async => context.read<BookingProvider>().refreshBookings(),
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
+            padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 2.h),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-              // Header Section
-              Container(
-                padding: EdgeInsets.all(4.w),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surface,
-                  boxShadow: [
-                    BoxShadow(
-                      color: theme.shadowColor.withValues(alpha: 0.1),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Column(
+                // Header
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // Top Bar
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Container(
-                            height: 48, // Fixed height for web compatibility
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.surfaceContainerHighest,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Row(
-                              children: [
-                                SizedBox(width: 3.w),
-                                CustomIconWidget(
-                                  iconName: 'search',
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                  size: 24,
-                                ),
-                                SizedBox(width: 2.w),
-                                Expanded(
-                                  child: TextField(
-                                    decoration: InputDecoration(
-                                      hintText: 'Search services...',
-                                      border: InputBorder.none,
-                                      hintStyle: theme.textTheme.bodyMedium?.copyWith(
-                                        color: theme.colorScheme.onSurfaceVariant,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        SizedBox(width: 3.w),
-                        Container(
-                          height: 48, // Fixed height for web compatibility
-                          width: 6.h,
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.surfaceContainerHighest,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              CustomIconWidget(
-                                iconName: 'notifications_outlined',
-                                color: theme.colorScheme.onSurface,
-                                size: 24,
-                              ),
-                              Positioned(
-                                top: 1.h,
-                                right: 1.5.w,
-                                child: Container(
-                                  width: 8,
-                                  height: 8,
-                                  decoration: BoxDecoration(
-                                    color: theme.colorScheme.error,
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 2.h),
-                    // Location
-                    Row(
-                      children: [
-                        CustomIconWidget(
-                          iconName: 'location_on',
-                          color: theme.colorScheme.primary,
-                          size: 20,
-                        ),
-                        SizedBox(width: 1.w),
-                        Text(
-                          'San Francisco, CA',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        SizedBox(width: 1.w),
-                        CustomIconWidget(
-                          iconName: 'keyboard_arrow_down',
-                          color: theme.colorScheme.onSurface,
-                          size: 20,
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-
-              SizedBox(height: 2.h),
-
-              // Welcome Section
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 4.w),
-                child: Consumer<AuthProvider>(
-                  builder: (context, authProvider, child) {
-                    return Column(
+                    Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Hello, ${authProvider.userName?.split(' ').first ?? 'User'}!',
-                          style: theme.textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                          'Welcome, ${authProvider.userName?.split(' ').first ?? 'User'}!',
+                          style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900, letterSpacing: -0.5),
                         ),
-                        SizedBox(height: 1.h),
-                        Text(
-                          'What service do you need today?',
-                          style: theme.textTheme.bodyLarge?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                ),
-              ),
-
-              SizedBox(height: 3.h),
-
-              // Service Categories
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 4.w),
-                child: Text(
-                  'Service Categories',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-
-              SizedBox(height: 2.h),
-
-              SizedBox(
-                height: 12.h,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  padding: EdgeInsets.symmetric(horizontal: 4.w),
-                  itemCount: _serviceCategories.length,
-                  separatorBuilder: (context, index) => SizedBox(width: 3.w),
-                  itemBuilder: (context, index) {
-                    final category = _serviceCategories[index];
-                    return FadeListItem(
-                      index: index,
-                      child: HoverWidget(
-                        child: ScaleButton(
-                          onTap: () {},
-                          child: _CategoryCard(category: category),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-
-              SizedBox(height: 3.h),
-
-              // Featured Services
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 4.w),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Featured Services',
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () {},
-                      child: const Text('See All'),
-                    ),
-                  ],
-                ),
-              ),
-
-              SizedBox(height: 1.h),
-
-              SizedBox(
-                height: 28.h,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  padding: EdgeInsets.symmetric(horizontal: 4.w),
-                  itemCount: _featuredServices.length,
-                  separatorBuilder: (context, index) => SizedBox(width: 3.w),
-                  itemBuilder: (context, index) {
-                    final service = _featuredServices[index];
-                    return FadeListItem(
-                      index: index,
-                      child: HoverWidget(
-                        child: _ServiceCard(service: service),
-                      ),
-                    );
-                  },
-                ),
-              ),
-
-              SizedBox(height: 3.h),
-
-              // Recent Bookings
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 4.w),
-                child: Text(
-                  'Recent Bookings',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-
-              SizedBox(height: 2.h),
-
-              Consumer<BookingProvider>(
-                builder: (context, bookingProvider, child) {
-                  final recentBookings = bookingProvider.bookings.take(3).toList();
-                  
-                  if (recentBookings.isEmpty) {
-                    return Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 4.w),
-                      child: Container(
-                        padding: EdgeInsets.all(4.w),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Column(
+                        Row(
                           children: [
-                            CustomIconWidget(
-                              iconName: 'assignment',
-                              color: theme.colorScheme.onSurfaceVariant,
-                              size: 12.w,
-                            ),
-                            SizedBox(height: 2.h),
-                            Text(
-                              'No bookings yet',
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            SizedBox(height: 1.h),
-                            Text(
-                              'Book your first service to get started',
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
+                            Icon(Icons.location_on_rounded, size: 14, color: theme.colorScheme.primary),
+                            SizedBox(width: 4),
+                            Text('Nairobi, Kenya', style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
                           ],
                         ),
-                      ),
-                    );
-                  }
+                      ],
+                    ),
+                    CustomAvatarWidget(
+                      imageUrl: authProvider.userPhotoUrl,
+                      fallbackText: authProvider.userName ?? 'U',
+                      radius: 28,
+                    ),
+                  ],
+                ).animate().fadeIn().slideX(begin: -0.1, end: 0),
 
-                  return ListView.separated(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    padding: EdgeInsets.symmetric(horizontal: 4.w),
-                    itemCount: recentBookings.length,
-                    separatorBuilder: (context, index) => SizedBox(height: 2.h),
-                    itemBuilder: (context, index) {
-                      final booking = recentBookings[index];
-                      return FadeListItem(
-                        index: index,
-                        child: HoverWidget(
-                          child: _BookingCard(booking: booking),
-                        ),
-                      );
-                    },
-                  );
-                },
-              ),
+                SizedBox(height: 3.h),
 
-              SizedBox(height: 3.h),
-            ],
+                // Search Bar
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 4.w),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surface,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5)),
+                    boxShadow: [
+                      BoxShadow(color: theme.shadowColor.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4)),
+                    ],
+                  ),
+                  child: TextField(
+                    decoration: InputDecoration(
+                      hintText: 'Search for services...',
+                      border: InputBorder.none,
+                      icon: Icon(Icons.search_rounded, color: theme.colorScheme.onSurfaceVariant),
+                    ),
+                  ),
+                ).animate().fadeIn(delay: 100.ms).slideY(begin: 0.1, end: 0),
+
+                SizedBox(height: 4.h),
+
+                // Categories
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Categories', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900)),
+                    TextButton(onPressed: onViewAll, child: const Text('View All')),
+                  ],
+                ).animate().fadeIn(delay: 200.ms),
+                SizedBox(height: 1.5.h),
+                const CategorySection().animate().fadeIn(delay: 300.ms),
+
+                SizedBox(height: 4.h),
+
+                // Featured Services
+                Text('Top Services', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900)).animate().fadeIn(delay: 400.ms),
+                SizedBox(height: 2.h),
+                const FeaturedServicesSection().animate().fadeIn(delay: 500.ms).slideX(begin: 0.1, end: 0),
+
+                SizedBox(height: 4.h),
+
+                // Recent Bookings
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('My Recent Activity', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900)),
+                    TextButton(onPressed: () {}, child: const Text('See History')),
+                  ],
+                ).animate().fadeIn(delay: 600.ms),
+                SizedBox(height: 1.5.h),
+                const RecentBookingsSection().animate().fadeIn(delay: 700.ms).slideY(begin: 0.1, end: 0),
+              ],
+            ),
           ),
         ),
-      ),
-    ),
-  );
-}
-}
-
-class _CategoryCard extends StatelessWidget {
-  final Map<String, dynamic> category;
-
-  const _CategoryCard({required this.category});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Container(
-      width: 20.w,
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 8.h,
-            height: 8.h,
-            decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withValues(alpha: 0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: CustomIconWidget(
-                iconName: category['icon'],
-                color: theme.colorScheme.primary,
-                size: 24,
-              ),
-            ),
-          ),
-          SizedBox(height: 1.h),
-          Text(
-            category['name'],
-            style: theme.textTheme.bodySmall?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
       ),
     );
   }
 }
 
-class _ServiceCard extends StatelessWidget {
-  final Map<String, dynamic> service;
-
-  const _ServiceCard({required this.service});
+class CategorySection extends StatelessWidget {
+  const CategorySection({super.key});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
-    return InkWell(
-      onTap: () {
-        // Create a temporary ProductModel from the map for the booking screen
-        // In a real app, you'd fetch the full model or pass it directly
-        try {
-          final product = ProductModel(
-            id: 'temp_${service['title']}', // Temporary ID since we use mock data here
-            title: service['title'],
-            description: service['description'],
-            price: double.parse(service['price'].replaceAll(RegExp(r'[^0-9.]'), '')),
-            category: 'General',
-            imageUrls: [service['image']],
-            createdBy: 'admin', // Required field
-            providerId: 'admin',
-            createdAt: DateTime.now(),
-          );
-          
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => BookingFormScreen(product: product),
-            ),
-          );
-        } catch (e) {
-          print('Error navigating to booking: $e');
-        }
+    return Consumer<ProductProvider>(
+      builder: (context, provider, _) {
+        final categories = provider.categories;
+        return SizedBox(
+          height: 12.h,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: categories.length,
+            separatorBuilder: (context, index) => SizedBox(width: 4.w),
+            itemBuilder: (context, index) {
+              final cat = categories[index];
+              return _CategoryItem(
+                name: cat,
+                icon: _getIconForCategory(cat),
+                color: _getColorForCategory(index),
+              ).animate().fadeIn(delay: (index * 100).ms).scale();
+            },
+          ),
+        );
       },
+    );
+  }
+
+  IconData _getIconForCategory(String name) {
+    switch (name.toLowerCase()) {
+      case 'cleaning': return Icons.cleaning_services_rounded;
+      case 'plumbing': return Icons.plumbing_rounded;
+      case 'electrical': return Icons.electrical_services_rounded;
+      case 'carpentry': return Icons.foundation_rounded;
+      case 'painting': return Icons.format_paint_rounded;
+      default: return Icons.category_rounded;
+    }
+  }
+
+  Color _getColorForCategory(int index) {
+    final colors = [Colors.blue, Colors.green, Colors.orange, Colors.purple, Colors.pink, Colors.teal];
+    return colors[index % colors.length];
+  }
+}
+
+class _CategoryItem extends StatelessWidget {
+  final String name;
+  final IconData icon;
+  final Color color;
+
+  const _CategoryItem({required this.name, required this.icon, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      children: [
+        Container(
+          width: 64,
+          height: 64,
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: color.withValues(alpha: 0.2)),
+          ),
+          child: Icon(icon, color: color, size: 28),
+        ),
+        SizedBox(height: 1.h),
+        Text(name, style: theme.textTheme.labelMedium?.copyWith(fontWeight: FontWeight.bold)),
+      ],
+    );
+  }
+}
+
+class FeaturedServicesSection extends StatelessWidget {
+  const FeaturedServicesSection({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<ProductProvider>(
+      builder: (context, provider, _) {
+        final products = provider.getFeaturedProducts(limit: 5);
+        if (products.isEmpty) return const SizedBox.shrink();
+        
+        return SizedBox(
+          height: 32.h,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: products.length,
+            separatorBuilder: (context, index) => SizedBox(width: 4.w),
+            itemBuilder: (context, index) {
+              final product = products[index];
+              return _ServiceCard(product: product);
+            },
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _ServiceCard extends StatelessWidget {
+  final ProductModel product;
+  const _ServiceCard({required this.product});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return InkWell(
+      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ServiceDetailsScreen(product: product))),
+      borderRadius: BorderRadius.circular(24),
       child: Container(
-        width: 280, // Fixed width helps on web and mobile lists
+        width: 70.w,
         decoration: BoxDecoration(
           color: theme.colorScheme.surface,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: theme.shadowColor.withValues(alpha: 0.1),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Stack(
-              children: [
-                ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                  child: CustomImageWidget(
-                    imageUrl: service['image'],
-                    width: 280,
-                    height: 16.h,
-                    fit: BoxFit.cover,
-                    semanticLabel: service['title'],
+            Expanded(
+              child: Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                    child: CustomImageWidget(imageUrl: product.imageUrls.isNotEmpty ? product.imageUrls.first : '', width: double.infinity, fit: BoxFit.cover),
                   ),
-                ),
-                Positioned(
-                  top: 1.h,
-                  right: 2.w,
-                  child: Container(
-                    padding: EdgeInsets.symmetric(horizontal: 3.w, vertical: 0.5.h),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.error,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      service['discount'],
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: theme.colorScheme.onError,
-                        fontWeight: FontWeight.w600,
+                  Positioned(
+                    top: 12,
+                    right: 12,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(12)),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.star_rounded, color: Colors.orange, size: 14),
+                          const SizedBox(width: 4),
+                          Text(product.rating.toString(), style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                        ],
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
             Padding(
-              padding: EdgeInsets.all(3.w),
+              padding: EdgeInsets.all(4.w),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    service['title'],
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  SizedBox(height: 0.5.h),
-                  Text(
-                    service['description'],
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                  Text(product.title, style: const TextStyle(fontWeight: FontWeight.w900), maxLines: 1, overflow: TextOverflow.ellipsis),
+                  Text(product.description, style: theme.textTheme.bodySmall, maxLines: 1, overflow: TextOverflow.ellipsis),
                   SizedBox(height: 1.h),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          CustomIconWidget(
-                            iconName: 'star',
-                            color: Colors.amber,
-                            size: 16,
-                          ),
-                          SizedBox(width: 1.w),
-                          Text(
-                            service['rating'].toString(),
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Text(
-                        service['price'],
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          color: theme.colorScheme.primary,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
-                  ),
+                  Text(product.formattedPrice, style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.w900)),
                 ],
               ),
             ),
@@ -585,154 +344,71 @@ class _ServiceCard extends StatelessWidget {
   }
 }
 
-class _BookingCard extends StatelessWidget {
-  final dynamic booking;
-
-  const _BookingCard({required this.booking});
+class RecentBookingsSection extends StatelessWidget {
+  const RecentBookingsSection({super.key});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    return Consumer<BookingProvider>(
+      builder: (context, provider, _) {
+        final bookings = provider.bookings.take(3).toList();
+        if (bookings.isEmpty) return const SizedBox.shrink();
 
-    return Container(
-      padding: EdgeInsets.all(4.w),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: theme.colorScheme.outline.withValues(alpha: 0.2),
-        ),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 12.w,
-            height: 12.w,
-            decoration: BoxDecoration(
-              color: _getStatusColor(booking.status).withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Center(
-              child: CustomIconWidget(
-                iconName: _getStatusIcon(booking.status),
-                color: _getStatusColor(booking.status),
-                size: 6.w,
-              ),
-            ),
+        return Container(
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surface,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5)),
           ),
-          SizedBox(width: 3.w),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  booking.productTitle ?? 'Service',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+          child: ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: bookings.length,
+            separatorBuilder: (context, index) => Divider(height: 1, color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3)),
+            itemBuilder: (context, index) {
+              final booking = bookings[index];
+              return ListTile(
+                contentPadding: EdgeInsets.all(4.w),
+                leading: Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(color: theme.colorScheme.primaryContainer, borderRadius: BorderRadius.circular(16)),
+                  child: Icon(Icons.receipt_long_rounded, color: theme.colorScheme.primary),
                 ),
-                SizedBox(height: 0.5.h),
-                Text(
-                  booking.statusDisplayName,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: _getStatusColor(booking.status),
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
+                title: Text(booking.productTitle ?? 'Service', style: const TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: Text(booking.statusDisplayName, style: TextStyle(color: _getStatusColor(booking.status), fontWeight: FontWeight.bold, fontSize: 12)),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () {},
+              );
+            },
           ),
-          Text(
-            booking.timeSinceCreation,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
   Color _getStatusColor(String status) {
     switch (status) {
-      case 'pending':
-        return Colors.orange;
-      case 'assigned':
-        return Colors.blue;
-      case 'active':
-        return Colors.green;
-      case 'completed':
-        return Colors.teal;
-      case 'cancelled':
-        return Colors.red;
-      default:
-        return Colors.grey;
-    }
-  }
-
-  String _getStatusIcon(String status) {
-    switch (status) {
-      case 'pending':
-        return 'pending';
-      case 'assigned':
-        return 'assigned';
-      case 'active':
-        return 'active';
-      case 'completed':
-        return 'completed';
-      case 'cancelled':
-        return 'cancelled';
-      default:
-        return 'info';
+      case 'pending': return Colors.orange;
+      case 'assigned': return Colors.blue;
+      case 'active': return Colors.green;
+      case 'completed': return Colors.teal;
+      default: return Colors.grey;
     }
   }
 }
 
-// Mock data
-final List<Map<String, dynamic>> _serviceCategories = [
-  {'name': 'Cleaning', 'icon': 'cleaning_services'},
-  {'name': 'Plumbing', 'icon': 'plumbing'},
-  {'name': 'Electrical', 'icon': 'electrical_services'},
-  {'name': 'Carpentry', 'icon': 'carpenter'},
-  {'name': 'Painting', 'icon': 'format_paint'},
-];
-
-final List<Map<String, dynamic>> _featuredServices = [
-  {
-    'title': 'Premium Home Cleaning',
-    'description': 'Professional deep cleaning service for your entire home',
-    'image': 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=400',
-    'rating': 4.8,
-    'price': '\$89.99',
-    'discount': '20% OFF',
-  },
-  {
-    'title': 'Expert Plumbing Services',
-    'description': '24/7 emergency plumbing repairs and installations',
-    'image': 'https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?w=400',
-    'rating': 4.9,
-    'price': '\$75.00',
-    'discount': '15% OFF',
-  },
-];
-
-// Placeholder pages for other client sections
 class ClientBrowsePage extends StatelessWidget {
   const ClientBrowsePage({super.key});
-
   @override
-  Widget build(BuildContext context) {
-    return const ServiceBrowseScreen();
-  }
+  Widget build(BuildContext context) => const ServiceBrowseScreen();
 }
 
 class ClientBookingsPage extends StatelessWidget {
   const ClientBookingsPage({super.key});
-
   @override
-  Widget build(BuildContext context) {
-    return const ClientBookingsScreen();
-  }
+  Widget build(BuildContext context) => const ClientBookingsScreen();
 }
 
 class ClientMessagesPage extends StatelessWidget {
@@ -741,178 +417,70 @@ class ClientMessagesPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final authProvider = context.watch<AuthProvider>();
-    
-    // Mock conversations for now - in production, fetch from ChatProvider
-    final conversations = [
-      {
-        'name': 'John\'s Cleaning Services',
-        'lastMessage': 'Your appointment is confirmed for tomorrow at 2 PM',
-        'time': '2 min ago',
-        'unread': 2,
-        'avatar': 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100',
-      },
-      {
-        'name': 'ProPlumb Experts',
-        'lastMessage': 'Thank you for your booking!',
-        'time': '1 hour ago',
-        'unread': 0,
-        'avatar': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100',
-      },
-      {
-        'name': 'ElectriCare',
-        'lastMessage': 'The technician is on the way',
-        'time': 'Yesterday',
-        'unread': 0,
-        'avatar': 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100',
-      },
-    ];
-    
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Messages'),
-        actions: [
-          IconButton(
-            icon: const CustomIconWidget(iconName: 'search'),
-            onPressed: () {},
-          ),
-        ],
-      ),
-      body: conversations.isEmpty
-          ? Center(
+      appBar: AppBar(title: const Text('Connect', style: TextStyle(fontWeight: FontWeight.w900)), centerTitle: false),
+      body: Consumer<MessageProvider>(
+        builder: (context, provider, _) {
+          final conversations = provider.conversations;
+          if (provider.isLoading && conversations.isEmpty) return const Center(child: CircularProgressIndicator());
+          if (conversations.isEmpty) {
+            return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  CustomIconWidget(
-                    iconName: 'chat_bubble_outline',
-                    color: theme.colorScheme.onSurfaceVariant,
-                    size: 80,
-                  ),
-                  SizedBox(height: 2.h),
-                  Text(
-                    'No messages yet',
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  SizedBox(height: 1.h),
-                  Text(
-                    'Start a conversation by booking a service',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
+                  Icon(Icons.chat_bubble_outline_rounded, size: 64, color: theme.colorScheme.outlineVariant),
+                  const SizedBox(height: 16),
+                  const Text('Your conversations will appear here', style: TextStyle(fontWeight: FontWeight.bold)),
                 ],
               ),
-            )
-          : ListView.builder(
-              padding: EdgeInsets.symmetric(vertical: 1.h),
-              itemCount: conversations.length,
-              itemBuilder: (context, index) {
-                final conv = conversations[index];
-                return FadeListItem(
-                  index: index,
-                  child: HoverWidget(
-                    child: ScaleButton(
-                      onTap: () {
-                        // Navigate to chat screen
-                      },
-                      child: Container(
-                        padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
-                        decoration: BoxDecoration(
-                          border: Border(
-                            bottom: BorderSide(
-                              color: theme.dividerColor.withValues(alpha: 0.3),
-                            ),
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            // Avatar with unread indicator
-                            Stack(
-                              children: [
-                                CircleAvatar(
-                                  radius: 28,
-                                  backgroundImage: NetworkImage(conv['avatar'] as String),
-                                ),
-                                if ((conv['unread'] as int) > 0)
-                                  Positioned(
-                                    right: 0,
-                                    top: 0,
-                                    child: Container(
-                                      padding: const EdgeInsets.all(6),
-                                      decoration: BoxDecoration(
-                                        color: theme.colorScheme.primary,
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: Text(
-                                        '${conv['unread']}',
-                                        style: theme.textTheme.labelSmall?.copyWith(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                              ],
-                            ),
-                            SizedBox(width: 4.w),
-                            // Content
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          conv['name'] as String,
-                                          style: theme.textTheme.titleMedium?.copyWith(
-                                            fontWeight: (conv['unread'] as int) > 0
-                                                ? FontWeight.bold
-                                                : FontWeight.w500,
-                                          ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                      Text(
-                                        conv['time'] as String,
-                                        style: theme.textTheme.bodySmall?.copyWith(
-                                          color: (conv['unread'] as int) > 0
-                                              ? theme.colorScheme.primary
-                                              : theme.colorScheme.onSurfaceVariant,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  SizedBox(height: 0.5.h),
-                                  Text(
-                                    conv['lastMessage'] as String,
-                                    style: theme.textTheme.bodyMedium?.copyWith(
-                                      color: (conv['unread'] as int) > 0
-                                          ? theme.colorScheme.onSurface
-                                          : theme.colorScheme.onSurfaceVariant,
-                                      fontWeight: (conv['unread'] as int) > 0
-                                          ? FontWeight.w500
-                                          : FontWeight.normal,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
+            );
+          }
+          return ListView.separated(
+            padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 2.h),
+            itemCount: conversations.length,
+            separatorBuilder: (context, index) => const Divider(),
+            itemBuilder: (context, index) {
+              final conv = conversations[index];
+              final MessageModel lastMessage = conv['message'];
+              final UserModel? otherUser = conv['otherUser'];
+              final int unreadCount = conv['unreadCount'] ?? 0;
+              final name = otherUser?.name ?? 'Partner';
+
+              return ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: CustomAvatarWidget(
+                  imageUrl: otherUser?.photoUrl,
+                  fallbackText: name[0],
+                  radius: 28,
+                ),
+                title: Text(name, style: const TextStyle(fontWeight: FontWeight.w900)),
+                subtitle: Text(lastMessage.text, maxLines: 1, overflow: TextOverflow.ellipsis),
+                trailing: Text(_formatTime(lastMessage.createdAt), style: theme.textTheme.bodySmall),
+                onTap: () {
+                  final authProvider = context.read<AuthProvider>();
+                  Navigator.pushNamed(
+                    context,
+                    '/chat',
+                    arguments: {
+                      'otherUserId': otherUser?.uid ?? (lastMessage.senderId == authProvider.userId ? lastMessage.receiverId : lastMessage.senderId),
+                      'otherUserName': name,
+                    },
+                  );
+                },
+              );
+            },
+          );
+        },
+      ),
     );
+  }
+
+  String _formatTime(DateTime dt) {
+    final now = DateTime.now();
+    if (now.difference(dt).inDays == 0) {
+      return '${dt.hour}:${dt.minute.toString().padLeft(2, '0')}';
+    }
+    return '${dt.day}/${dt.month}';
   }
 }
 
@@ -922,241 +490,108 @@ class ClientProfilePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+    final authProvider = context.watch<AuthProvider>();
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Profile'),
+      appBar: AppBar(title: const Text('My Space', style: TextStyle(fontWeight: FontWeight.w900)), centerTitle: false),
+      body: SingleChildScrollView(
+        padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 2.h),
+        child: Column(
+          children: [
+            Container(
+              padding: EdgeInsets.all(6.w),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary,
+                borderRadius: BorderRadius.circular(32),
+                boxShadow: [
+                  BoxShadow(color: theme.colorScheme.primary.withValues(alpha: 0.2), blurRadius: 15, offset: const Offset(0, 8)),
+                ],
+              ),
+              child: Row(
+                children: [
+                  CustomAvatarWidget(imageUrl: authProvider.userPhotoUrl, fallbackText: authProvider.userName ?? 'U', radius: 36),
+                  const SizedBox(width: 20),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(authProvider.userName ?? 'User', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 20)),
+                        Text(authProvider.currentUser?.email ?? '', style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 12)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 4.h),
+            _buildSection(theme, 'Experience', [
+              _ProfileItem(icon: Icons.dark_mode_rounded, title: 'Dark Mode', trailing: Switch(value: theme.brightness == Brightness.dark, onChanged: (v) => authProvider.toggleTheme())),
+              _ProfileItem(icon: Icons.notifications_rounded, title: 'Notifications', onTap: () {}),
+            ]),
+            SizedBox(height: 2.h),
+            _buildSection(theme, 'Account', [
+              _ProfileItem(icon: Icons.security_rounded, title: 'Security', onTap: () {}),
+              _ProfileItem(icon: Icons.logout_rounded, title: 'Logout', color: Colors.red, showArrow: false, onTap: () => _handleLogout(context)),
+            ]),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSection(ThemeData theme, String title, List<_ProfileItem> items) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(padding: const EdgeInsets.only(left: 8, bottom: 8), child: Text(title.toUpperCase(), style: theme.textTheme.labelMedium?.copyWith(letterSpacing: 1.2))),
+        Container(
+          decoration: BoxDecoration(color: theme.colorScheme.surface, borderRadius: BorderRadius.circular(24), border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5))),
+          child: Column(children: items),
+        ),
+      ],
+    );
+  }
+
+  void _handleLogout(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Logout'),
+        content: const Text('Are you sure you want to exit?'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         actions: [
-          IconButton(
-            icon: const CustomIconWidget(iconName: 'settings'),
-            onPressed: () {
-              // Navigate to settings
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await context.read<AuthProvider>().signOut();
+              if (context.mounted) AppRouter.navigateToLogin(context);
             },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+            child: const Text('Logout'),
           ),
         ],
-      ),
-      body: Consumer<AuthProvider>(
-        builder: (context, authProvider, child) {
-          return SingleChildScrollView(
-            padding: EdgeInsets.all(4.w),
-            child: Column(
-              children: [
-                // Profile Header
-                Container(
-                  padding: EdgeInsets.all(6.w),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        theme.colorScheme.primary,
-                        theme.colorScheme.primary.withValues(alpha: 0.7),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Column(
-                    children: [
-                      // Avatar
-                      CircleAvatar(
-                        radius: 50,
-                        backgroundColor: Colors.white,
-                        backgroundImage: authProvider.userPhotoUrl != null
-                            ? NetworkImage(authProvider.userPhotoUrl!)
-                            : null,
-                        child: authProvider.userPhotoUrl == null
-                            ? Text(
-                                authProvider.userName?.substring(0, 1).toUpperCase() ?? 'U',
-                                style: theme.textTheme.headlineLarge?.copyWith(
-                                  color: theme.colorScheme.primary,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              )
-                            : null,
-                      ),
-                      SizedBox(height: 2.h),
-                      Text(
-                        authProvider.userName ?? 'User',
-                        style: theme.textTheme.headlineSmall?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      SizedBox(height: 0.5.h),
-                      Text(
-                        authProvider.userEmail ?? '',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: Colors.white.withValues(alpha: 0.9),
-                        ),
-                      ),
-                      SizedBox(height: 2.h),
-                      Container(
-                        padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.h),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          'Client Account',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                
-                SizedBox(height: 3.h),
-                
-                // Profile Options
-                _ProfileOption(
-                  icon: 'person',
-                  title: 'Edit Profile',
-                  subtitle: 'Update your personal information',
-                  onTap: () {},
-                ),
-                _ProfileOption(
-                  icon: 'history',
-                  title: 'Booking History',
-                  subtitle: 'View your past bookings',
-                  onTap: () {},
-                ),
-                _ProfileOption(
-                  icon: 'payment',
-                  title: 'Payment Methods',
-                  subtitle: 'Manage your payment options',
-                  onTap: () {},
-                ),
-                _ProfileOption(
-                  icon: 'notifications',
-                  title: 'Notifications',
-                  subtitle: 'Configure notification settings',
-                  onTap: () {},
-                ),
-                _ProfileOption(
-                  icon: 'help',
-                  title: 'Help & Support',
-                  subtitle: 'Get help or contact us',
-                  onTap: () {},
-                ),
-                
-                SizedBox(height: 3.h),
-                
-                // Logout Button
-                SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: OutlinedButton.icon(
-                    onPressed: () async {
-                      final authProvider = context.read<AuthProvider>();
-                      await authProvider.signOut();
-                      if (context.mounted) {
-                        AppRouter.navigateToLogin(context);
-                      }
-                    },
-                    icon: const CustomIconWidget(iconName: 'logout', color: Colors.red),
-                    label: Text(
-                      'Log Out',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        color: Colors.red,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Colors.red),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
-                ),
-                
-                SizedBox(height: 2.h),
-              ],
-            ),
-          );
-        },
       ),
     );
   }
 }
 
-class _ProfileOption extends StatelessWidget {
-  final String icon;
+class _ProfileItem extends StatelessWidget {
+  final IconData icon;
   final String title;
-  final String subtitle;
-  final VoidCallback onTap;
-
-  const _ProfileOption({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-  });
-
+  final VoidCallback? onTap;
+  final Widget? trailing;
+  final Color? color;
+  final bool showArrow;
+  const _ProfileItem({required this.icon, required this.title, this.onTap, this.trailing, this.color, this.showArrow = true});
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
-    return HoverWidget(
-      child: ScaleButton(
-        onTap: onTap,
-        child: Container(
-          margin: EdgeInsets.only(bottom: 2.h),
-          padding: EdgeInsets.all(4.w),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surface,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: theme.colorScheme.outline.withValues(alpha: 0.2),
-            ),
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: EdgeInsets.all(3.w),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: CustomIconWidget(
-                  iconName: icon,
-                  color: theme.colorScheme.primary,
-                  size: 24,
-                ),
-              ),
-              SizedBox(width: 4.w),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    SizedBox(height: 0.5.h),
-                    Text(
-                      subtitle,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              CustomIconWidget(
-                iconName: 'chevron_right',
-                color: theme.colorScheme.onSurfaceVariant,
-                size: 24,
-              ),
-            ],
-          ),
-        ),
-      ),
+    return ListTile(
+      onTap: onTap,
+      leading: Icon(icon, color: color ?? theme.colorScheme.primary),
+      title: Text(title, style: TextStyle(fontWeight: FontWeight.bold, color: color)),
+      trailing: trailing ?? (showArrow ? const Icon(Icons.chevron_right_rounded) : null),
     );
   }
 }

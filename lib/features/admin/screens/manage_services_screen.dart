@@ -1,15 +1,13 @@
-import 'dart:typed_data';
+import 'dart:typed_bytes';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sizer/sizer.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../providers/product_provider.dart';
 import '../../../../providers/auth_provider.dart';
 import '../../../../models/product_model.dart';
-import '../../../../core/app_colors.dart';
-import '../../../../core/utils/animations.dart';
 import '../../../../utils/image_helpers.dart';
-import '../../../../widgets/custom_icon_widget.dart';
+import '../../../../widgets/custom_image_widget.dart';
 
 class ManageServicesScreen extends StatefulWidget {
   const ManageServicesScreen({super.key});
@@ -49,22 +47,9 @@ class _ManageServicesScreenState extends State<ManageServicesScreen> {
     _editingProductId = null;
   }
 
-  Future<void> _pickImage() async {
-    final image = await ImageHelpers.pickImageFromGallery();
-    if (image != null) {
-      final bytes = await image.readAsBytes();
-      setState(() {
-        _selectedImageBytes = bytes;
-        _selectedImageName = image.name;
-      });
-    }
-  }
-
   Future<void> _saveService() async {
     if (_nameController.text.isEmpty || _priceController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill in name and price'))
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please fill in name and price')));
       return;
     }
 
@@ -72,7 +57,6 @@ class _ManageServicesScreenState extends State<ManageServicesScreen> {
     final authProvider = context.read<AuthProvider>();
     
     bool success = false;
-    
     if (_isEditing && _editingProductId != null) {
       success = await productProvider.updateProduct(
         _editingProductId!,
@@ -85,12 +69,9 @@ class _ManageServicesScreenState extends State<ManageServicesScreen> {
       );
     } else {
       if (_selectedImageBytes == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please select an image'))
-        );
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select an image')));
         return;
       }
-      
       success = await productProvider.createProduct(
         title: _nameController.text.trim(),
         description: _descController.text.trim(),
@@ -105,13 +86,9 @@ class _ManageServicesScreenState extends State<ManageServicesScreen> {
     if (success && mounted) {
       Navigator.pop(context);
       _resetForm();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(_isEditing ? 'Service Updated' : 'Service Added'))
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_isEditing ? 'Service Updated' : 'Service Added')));
     } else if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(productProvider.errorMessage ?? 'Operation failed'))
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(productProvider.errorMessage ?? 'Operation failed')));
     }
   }
 
@@ -133,147 +110,110 @@ class _ManageServicesScreenState extends State<ManageServicesScreen> {
       backgroundColor: Colors.transparent,
       builder: (context) => StatefulBuilder(
         builder: (ctx, setModalState) => Container(
-          height: 85.h,
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-          ),
-          padding: EdgeInsets.all(6.w),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    _isEditing ? 'Edit Service' : 'Add New Service',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ],
-              ),
-              const Divider(),
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      SizedBox(height: 2.h),
-                      // Image Picker
-                      Center(
-                        child: GestureDetector(
-                          onTap: () async {
-                            final image = await ImageHelpers.pickImageFromGallery();
-                            if (image != null) {
-                              final bytes = await image.readAsBytes();
-                              setModalState(() {
-                                _selectedImageBytes = bytes;
-                                _selectedImageName = image.name;
-                              });
-                            }
-                          },
-                          child: Container(
-                            width: double.infinity,
-                            height: 20.h,
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade100,
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(color: Colors.grey.shade300, style: BorderStyle.solid),
-                              image: _selectedImageBytes != null
-                                  ? DecorationImage(image: MemoryImage(_selectedImageBytes!), fit: BoxFit.cover)
-                                  : (product != null && product.imageUrls.isNotEmpty
-                                      ? DecorationImage(image: NetworkImage(product.imageUrls.first), fit: BoxFit.cover)
-                                      : null),
+          decoration: BoxDecoration(color: Theme.of(context).colorScheme.surface, borderRadius: const BorderRadius.vertical(top: Radius.circular(32))),
+          padding: EdgeInsets.fromLTRB(6.w, 2.h, 6.w, MediaQuery.of(context).viewInsets.bottom + 4.h),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(2)))),
+                SizedBox(height: 3.h),
+                Text(_isEditing ? 'Edit Service' : 'Add New Service', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900)),
+                SizedBox(height: 3.h),
+                GestureDetector(
+                  onTap: () async {
+                    final image = await ImageHelpers.pickImageFromGallery();
+                    if (image != null) {
+                      final bytes = await image.readAsBytes();
+                      setModalState(() {
+                        _selectedImageBytes = bytes;
+                        _selectedImageName = image.name;
+                      });
+                    }
+                  },
+                  child: Container(
+                    width: double.infinity,
+                    height: 20.h,
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+                      image: _selectedImageBytes != null
+                          ? DecorationImage(image: MemoryImage(_selectedImageBytes!), fit: BoxFit.cover)
+                          : (product != null && product.imageUrls.isNotEmpty ? DecorationImage(image: NetworkImage(product.imageUrls.first), fit: BoxFit.cover) : null),
+                    ),
+                    child: (_selectedImageBytes == null && (product == null || product.imageUrls.isEmpty))
+                        ? Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.add_a_photo_rounded, size: 40, color: Theme.of(context).colorScheme.primary),
+                              SizedBox(height: 1.h),
+                              const Text('Upload Cover Photo', style: TextStyle(fontWeight: FontWeight.bold)),
+                            ],
+                          )
+                        : Align(
+                            alignment: Alignment.bottomRight,
+                            child: Container(
+                              margin: const EdgeInsets.all(12),
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(color: Theme.of(context).colorScheme.primary, shape: BoxShape.circle),
+                              child: const Icon(Icons.edit_rounded, color: Colors.white, size: 20),
                             ),
-                            child: (_selectedImageBytes == null && (product == null || product.imageUrls.isEmpty))
-                                ? Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      const Icon(Icons.add_a_photo, size: 40, color: Colors.grey),
-                                      SizedBox(height: 1.h),
-                                      const Text('Tap to upload image', style: TextStyle(color: Colors.grey)),
-                                    ],
-                                  )
-                                : Container(
-                                    alignment: Alignment.bottomRight,
-                                    padding: const EdgeInsets.all(8),
-                                    child: const CircleAvatar(
-                                      backgroundColor: Colors.white,
-                                      child: Icon(Icons.edit, color: AppColors.primary),
-                                    ),
-                                  ),
                           ),
-                        ),
-                      ),
-                      SizedBox(height: 3.h),
-                      TextField(
-                        controller: _nameController,
-                        decoration: const InputDecoration(
-                          labelText: 'Service Name',
-                          hintText: 'e.g. Master Plumbing',
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
-                      SizedBox(height: 2.h),
-                      TextField(
-                        controller: _priceController,
-                        keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                          labelText: 'Price (\$)',
-                          hintText: 'e.g. 50.00',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.attach_money),
-                        ),
-                      ),
-                      SizedBox(height: 2.h),
-                      DropdownButtonFormField<String>(
+                  ),
+                ),
+                SizedBox(height: 3.h),
+                _buildField('Service Name', _nameController, Icons.work_outline_rounded),
+                SizedBox(height: 2.h),
+                Row(
+                  children: [
+                    Expanded(child: _buildField('Price', _priceController, Icons.payments_outlined, isNumber: true, prefix: '$')),
+                    SizedBox(width: 4.w),
+                    Expanded(
+                      child: DropdownButtonFormField<String>(
                         value: _selectedCategory,
                         items: _categories.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
                         onChanged: (v) => setModalState(() => _selectedCategory = v!),
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'Category',
-                          border: OutlineInputBorder(),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                         ),
                       ),
-                      SizedBox(height: 2.h),
-                      TextField(
-                        controller: _descController,
-                        maxLines: 3,
-                        decoration: const InputDecoration(
-                          labelText: 'Description',
-                          hintText: 'What does this service include?',
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
-                      SizedBox(height: 4.h),
-                      Consumer<ProductProvider>(
-                        builder: (context, provider, _) => SizedBox(
-                          width: double.infinity,
-                          height: 48,
-                          child: ElevatedButton(
-                            onPressed: provider.isLoading ? null : _saveService,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primary,
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            ),
-                            child: provider.isLoading
-                                ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                                : Text(_isEditing ? 'Update Service' : 'Create Service'),
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: 2.h),
-                    ],
+                    ),
+                  ],
+                ),
+                SizedBox(height: 2.h),
+                _buildField('Description', _descController, Icons.description_outlined, maxLines: 3),
+                SizedBox(height: 4.h),
+                SizedBox(
+                  width: double.infinity,
+                  height: 60,
+                  child: ElevatedButton(
+                    onPressed: _saveService,
+                    style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.primary, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
+                    child: Text(_isEditing ? 'Update Service' : 'Create Service', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildField(String label, TextEditingController controller, IconData icon, {bool isNumber = false, String? prefix, int maxLines = 1}) {
+    return TextFormField(
+      controller: controller,
+      keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+      maxLines: maxLines,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon),
+        prefixText: prefix,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
       ),
     );
   }
@@ -283,114 +223,89 @@ class _ManageServicesScreenState extends State<ManageServicesScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Manage Services'),
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-        foregroundColor: Colors.black,
-      ),
+      appBar: AppBar(title: const Text('Manage Services', style: TextStyle(fontWeight: FontWeight.w900)), centerTitle: false),
       floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: AppColors.primary,
         onPressed: () => _showServiceForm(),
-        label: const Text('New Service', style: TextStyle(color: Colors.white)),
-        icon: const Icon(Icons.add, color: Colors.white),
+        label: const Text('New Service'),
+        icon: const Icon(Icons.add_rounded),
       ),
       body: Consumer<ProductProvider>(
-        builder: (context, productProvider, _) {
-          final products = productProvider.allProducts;
-
-          if (productProvider.isLoading && products.isEmpty) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
+        builder: (context, provider, _) {
+          final products = provider.allProducts;
+          if (provider.isLoading && products.isEmpty) return const Center(child: CircularProgressIndicator());
           if (products.isEmpty) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const CustomIconWidget(iconName: 'business', size: 64, color: Colors.grey),
-                  SizedBox(height: 2.h),
-                  const Text('No services yet', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  const Text('Add your first specialized service above', style: TextStyle(color: Colors.grey)),
+                  Icon(Icons.inventory_2_rounded, size: 64, color: theme.colorScheme.outlineVariant),
+                  const SizedBox(height: 16),
+                  const Text('No services found', style: TextStyle(fontWeight: FontWeight.bold)),
                 ],
               ),
             );
           }
 
           return RefreshIndicator(
-            onRefresh: () => productProvider.refreshProducts(),
+            onRefresh: () async => provider.refreshProducts(),
             child: ListView.builder(
-              padding: EdgeInsets.all(4.w),
+              padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 2.h),
               itemCount: products.length,
               itemBuilder: (context, index) {
                 final product = products[index];
-                return FadeListItem(
-                  index: index,
-                  child: HoverWidget(
-                    child: Card(
-                      elevation: 0,
-                      margin: EdgeInsets.only(bottom: 2.h),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        side: BorderSide(color: Colors.grey.shade200),
+                return Container(
+                  margin: EdgeInsets.only(bottom: 2.h),
+                  decoration: BoxDecoration(color: theme.colorScheme.surface, borderRadius: BorderRadius.circular(24), border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5))),
+                  child: Column(
+                    children: [
+                      ClipRRect(
+                        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                        child: CustomImageWidget(
+                          imageUrl: product.imageUrls.isNotEmpty ? product.imageUrls.first : '',
+                          height: 18.h,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                          semanticLabel: 'Service image for ${product.title}',
+                        ),
                       ),
-                      child: Padding(
-                        padding: EdgeInsets.all(3.w),
-                        child: Row(
+                      Padding(
+                        padding: EdgeInsets.all(4.w),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
-                              child: Image.network(
-                                product.imageUrls.isNotEmpty ? product.imageUrls.first : 'https://via.placeholder.com/150',
-                                width: 20.w,
-                                height: 20.w,
-                                fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => Container(
-                                  width: 20.w,
-                                  height: 20.w,
-                                  color: Colors.grey.shade100,
-                                  child: const Icon(Icons.image_not_supported),
-                                ),
-                              ),
-                            ),
-                            SizedBox(width: 4.w),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    product.title,
-                                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                                  ),
-                                  Text(
-                                    product.category,
-                                    style: theme.textTheme.bodySmall?.copyWith(color: AppColors.primary),
-                                  ),
-                                  SizedBox(height: 0.5.h),
-                                  Text(
-                                    '\$${product.price.toStringAsFixed(2)}',
-                                    style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Column(
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                IconButton(
-                                  icon: const Icon(Icons.edit_outlined, color: Colors.blue),
-                                  onPressed: () => _showServiceForm(product: product),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                  decoration: BoxDecoration(color: theme.colorScheme.primaryContainer, borderRadius: BorderRadius.circular(10)),
+                                  child: Text(product.category, style: TextStyle(color: theme.colorScheme.onPrimaryContainer, fontSize: 10, fontWeight: FontWeight.bold)),
                                 ),
-                                IconButton(
-                                  icon: const Icon(Icons.delete_outline, color: Colors.red),
-                                  onPressed: () => _confirmDelete(product),
+                                Text('\$${product.price.toStringAsFixed(2)}', style: TextStyle(color: theme.colorScheme.primary, fontWeight: FontWeight.w900, fontSize: 18)),
+                              ],
+                            ),
+                            SizedBox(height: 1.h),
+                            Text(product.title, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
+                            Text(product.description, maxLines: 2, overflow: TextOverflow.ellipsis, style: theme.textTheme.bodySmall),
+                            const Divider(height: 24),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                TextButton.icon(onPressed: () => _showServiceForm(product: product), icon: const Icon(Icons.edit_rounded, size: 18), label: const Text('Edit')),
+                                SizedBox(width: 4.w),
+                                TextButton.icon(
+                                  onPressed: () => _handleDelete(context, product),
+                                  icon: const Icon(Icons.delete_outline_rounded, size: 18),
+                                  label: const Text('Delete'),
+                                  style: TextButton.styleFrom(foregroundColor: Colors.red),
                                 ),
                               ],
                             ),
                           ],
                         ),
                       ),
-                    ),
-                  ),
+                    ],
+                  ).animate().fadeIn(delay: (index * 50).ms).slideX(begin: 0.05, end: 0),
                 );
               },
             ),
@@ -400,23 +315,21 @@ class _ManageServicesScreenState extends State<ManageServicesScreen> {
     );
   }
 
-  void _confirmDelete(ProductModel product) {
+  void _handleDelete(BuildContext context, ProductModel product) {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Delete Service'),
-        content: Text('Are you sure you want to remove "${product.title}"?'),
+      builder: (context) => AlertDialog(
+        title: const Text('Confirm Delete'),
+        content: Text('Remove "${product.title}"? This cannot be undone.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(ctx);
-              final success = await context.read<ProductProvider>().deleteProduct(product.id);
-              if (success && mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Service Deleted')));
-              }
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () {
+              context.read<ProductProvider>().deleteProduct(product.id);
+              Navigator.pop(context);
             },
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+            child: const Text('Delete'),
           ),
         ],
       ),

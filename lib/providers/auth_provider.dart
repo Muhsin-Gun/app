@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../core/app_config.dart';
 import '../models/user_model.dart';
@@ -15,8 +15,10 @@ class AuthProvider extends ChangeNotifier {
   bool _isLoading = false;
   String? _errorMessage;
   bool _isInitialized = false;
+  ThemeMode _themeMode = ThemeMode.system;
 
   // Getters
+  ThemeMode get themeMode => _themeMode;
   User? get user => _firebaseUser; // Added getter
   User? get firebaseUser => _firebaseUser;
   UserModel? get userModel => _userModel;
@@ -535,6 +537,22 @@ class AuthProvider extends ChangeNotifier {
       default:
         return '/login';
     }
+  }
+
+  // Set theme mode
+  void setThemeMode(ThemeMode mode) {
+    _themeMode = mode;
+    notifyListeners();
+  }
+
+  // Toggle theme mode
+  void toggleTheme() {
+    if (_themeMode == ThemeMode.light) {
+      _themeMode = ThemeMode.dark;
+    } else {
+      _themeMode = ThemeMode.light;
+    }
+    notifyListeners();
   }
 
   // Helper methods

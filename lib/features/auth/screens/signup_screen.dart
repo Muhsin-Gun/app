@@ -1,19 +1,16 @@
-
 import 'dart:convert';
 import 'dart:typed_data';
-
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:promarket/core/theme.dart';
-import 'package:promarket/providers/auth_provider.dart';
-import 'package:promarket/features/auth/screens/login_screen.dart';
-// import 'package:promarket/features/marketplace/marketplace_home_screen.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:http/http.dart' as http;
 import 'package:iconly/iconly.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:sizer/sizer.dart';
+import 'package:promarket/providers/auth_provider.dart';
+import 'package:promarket/features/auth/screens/login_screen.dart';
 import 'package:promarket/core/constants.dart';
-import 'package:promarket/core/app_colors.dart';
+import 'package:promarket/routing/app_router.dart';
 
 class SignupScreen extends StatefulWidget {
   static const routeName = '/SignupScreen';
@@ -26,8 +23,9 @@ class SignupScreen extends StatefulWidget {
 class _SignupScreenState extends State<SignupScreen> {
   Uint8List? _pickedImageBytes;
   String? _pickedImageName;
-
   bool obscureText = true;
+  bool isLoading = false;
+
   late final TextEditingController _nameController;
   late final TextEditingController _emailController;
   late final TextEditingController _passwordController;
@@ -39,10 +37,7 @@ class _SignupScreenState extends State<SignupScreen> {
   late final FocusNode _passwordFocusNode;
   late final FocusNode _repeatPasswordFocusNode;
 
-  bool isLoading = false;
-  late String userImageUrl;
   final _formKey = GlobalKey<FormState>();
-  // XFile? _pickedImage; // Unused based on bytes usage
 
   @override
   void initState() {
@@ -51,7 +46,6 @@ class _SignupScreenState extends State<SignupScreen> {
     _passwordController = TextEditingController();
     _repeatPasswordController = TextEditingController();
     _phoneController = TextEditingController();
-    // Focus Nodes
     _nameFocusNode = FocusNode();
     _emailFocusNode = FocusNode();
     _passwordFocusNode = FocusNode();
@@ -61,145 +55,64 @@ class _SignupScreenState extends State<SignupScreen> {
 
   @override
   void dispose() {
-    if (mounted) {
-      _nameController.dispose();
-      _emailController.dispose();
-      _passwordController.dispose();
-      _repeatPasswordController.dispose();
-      _phoneController.dispose();
-      // Focus Nodes
-      _nameFocusNode.dispose();
-      _emailFocusNode.dispose();
-      _passwordFocusNode.dispose();
-      _repeatPasswordFocusNode.dispose();
-    }
+    _nameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    _repeatPasswordController.dispose();
+    _phoneController.dispose();
+    _nameFocusNode.dispose();
+    _emailFocusNode.dispose();
+    _passwordFocusNode.dispose();
+    _repeatPasswordFocusNode.dispose();
     super.dispose();
   }
 
-  Future<void> _localImagePicker() async {
-    final ImagePicker imagePicker = ImagePicker();
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.darkCard,
-        title: const Text('Pick Image', style: TextStyle(color: Colors.white)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.camera, color: Colors.white),
-              title: const Text(
-                'Camera',
-                style: TextStyle(color: Colors.white),
-              ),
-              onTap: () async {
-                Navigator.pop(context);
-                final XFile? image = await imagePicker.pickImage(
-                  source: ImageSource.camera,
-                );
-                if (image != null) {
-                  _pickedImageBytes = await image.readAsBytes();
-                  _pickedImageName = image.name;
-                  setState(() {});
-                }
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.image, color: Colors.white),
-              title: const Text(
-                'Gallery',
-                style: TextStyle(color: Colors.white),
-              ),
-              onTap: () async {
-                Navigator.pop(context);
-                final XFile? image = await imagePicker.pickImage(
-                  source: ImageSource.gallery,
-                );
-                if (image != null) {
-                  _pickedImageBytes = await image.readAsBytes();
-                  _pickedImageName = image.name;
-                  setState(() {});
-                }
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.delete, color: Colors.white),
-              title: const Text(
-                'Remove',
-                style: TextStyle(color: Colors.white),
-              ),
-              onTap: () {
-                Navigator.pop(context);
-                setState(() {
-                  _pickedImageBytes = null;
-                  _pickedImageName = null;
-                });
-              },
-            ),
-          ],
-        ),
-      ),
-    );
+  Future<void> _pickImage() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      final bytes = await image.readAsBytes();
+      setState(() {
+        _pickedImageBytes = bytes;
+        _pickedImageName = image.name;
+      });
+    }
   }
 
-  Future<String?> _uploadImageToCloudinary(
-    Uint8List imageBytes,
-    String fileName,
-  ) async {
+  Future<String?> _uploadImageToCloudinary(Uint8List imageBytes, String fileName) async {
     final cloudName = AppConstants.cloudinaryCloudName;
     final uploadPreset = AppConstants.cloudinaryUploadPreset;
-
-    final url = Uri.parse(
-      'https://api.cloudinary.com/v1_1/$cloudName/image/upload',
-    );
+    final url = Uri.parse('https://api.cloudinary.com/v1_1/$cloudName/image/upload');
 
     final request = http.MultipartRequest('POST', url);
     request.fields['upload_preset'] = uploadPreset;
-
-    request.files.add(
-      http.MultipartFile.fromBytes('file', imageBytes, filename: fileName),
-    );
+    request.files.add(http.MultipartFile.fromBytes('file', imageBytes, filename: fileName));
 
     try {
       final response = await request.send();
-
       if (response.statusCode == 200) {
         final respStr = await response.stream.bytesToString();
         final data = jsonDecode(respStr);
         return data['secure_url'];
       }
     } catch (e) {
-      print('Image upload error: $e');
+      debugPrint('Image upload error: $e');
     }
     return null;
   }
 
-  Future<void> _registerFCT() async {
-    final isValid = _formKey.currentState!.validate();
-    FocusScope.of(context).unfocus();
-
-    if (!isValid) {
-      return;
-    }
-
+  Future<void> _register() async {
+    if (!_formKey.currentState!.validate()) return;
     if (_pickedImageBytes == null) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Please select an image')));
-      }
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select a profile photo'), backgroundColor: Colors.orange));
       return;
     }
 
-    setState(() {
-      isLoading = true;
-    });
+    setState(() => isLoading = true);
 
     try {
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-
-      // 1) Create user with Firebase Auth (via provider)
+      final authProvider = context.read<AuthProvider>();
+      
       final success = await authProvider.createUserWithEmailAndPassword(
         _emailController.text.trim(),
         _passwordController.text.trim(),
@@ -207,419 +120,227 @@ class _SignupScreenState extends State<SignupScreen> {
       );
 
       if (!success) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(authProvider.errorMessage ?? 'Registration failed'),
-            ),
-          );
-        }
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(authProvider.errorMessage ?? 'Registration failed'), backgroundColor: Colors.red));
         return;
       }
 
-      // 2) Upload image to Cloudinary
-      userImageUrl = await _uploadImageToCloudinary(
-            _pickedImageBytes!,
-            _pickedImageName ?? 'profile.jpg',
-          ) ??
-          '';
-
-      if (userImageUrl.isEmpty) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Image upload failed')),
-          );
-        }
-        return;
-      }
-
-      // 3) Save image URL and phone into Firestore profile via AuthProvider
-      if (authProvider.userModel != null || authProvider.firebaseUser != null) {
-        await authProvider.updateUserProfile(
-          phone: _phoneController.text.trim(),
-          photoUrl: userImageUrl,
-        );
+      final imageUrl = await _uploadImageToCloudinary(_pickedImageBytes!, _pickedImageName ?? 'profile.jpg');
+      
+      if (imageUrl != null) {
+        await authProvider.updateUserProfile(phone: _phoneController.text.trim(), photoUrl: imageUrl);
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Registration successful! Please log in.'),
-          ),
-        );
-
-        // Navigate to dashboard (user is already signed in after creation)
-         if (authProvider.userRole == 'admin') {
-           Navigator.pushReplacementNamed(context, '/admin-dashboard');
-        } else if (authProvider.userRole == 'employee') {
-           Navigator.pushReplacementNamed(context, '/employee-dashboard');
-        } else {
-           Navigator.pushReplacementNamed(context, '/client-dashboard');
-        }
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Account created successfully!'), backgroundColor: Colors.green));
+        AppRouter.navigateToDashboard(context, authProvider.userRole ?? 'client');
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Registration failed: $e')));
-      }
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red));
     } finally {
-      if (mounted) {
-        setState(() {
-          isLoading = false;
-        });
-      }
+      if (mounted) setState(() => isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final isWeb = MediaQuery.of(context).size.width > 600;
-    final screenSize = MediaQuery.of(context).size;
-
-    return GestureDetector(
-      onTap: () {
-        FocusScope.of(context).unfocus();
-      },
-      child: Scaffold(
-        backgroundColor: AppColors.darkBackground,
-        body: SafeArea(
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: isWeb ? screenSize.width * 0.2 : 16,
-                vertical: 16,
+    final theme = Theme.of(context);
+    
+    return Scaffold(
+      body: Stack(
+        children: [
+          Positioned(
+            top: -100,
+            left: -100,
+            child: Container(
+              width: 300,
+              height: 300,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: theme.colorScheme.primary.withOpacity(0.05),
               ),
+            ),
+          ),
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                   const SizedBox(height: 20),
-                  // Logo
-                  Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      gradient: AppColors.primaryGradient,
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.primary.withValues(alpha: 0.3),
-                          blurRadius: 20,
-                          spreadRadius: 2,
-                        ),
-                      ],
-                    ),
-                    child: const Center(
-                      child: Text(
-                        'DL',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  // Title
+                  const SizedBox(height: 40),
                   Text(
                     'Create Account',
+                    style: theme.textTheme.headlineLarge?.copyWith(fontWeight: FontWeight.w900, letterSpacing: -1),
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: isWeb ? 32 : 28,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  ).animate().fadeIn().slideY(begin: -0.2, end: 0),
+                  
                   const SizedBox(height: 8),
                   Text(
-                    'Join our community',
+                    'Join ProMarket today and experience premium services.',
+                    style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.6),
-                      fontSize: 16,
-                    ),
-                  ),
-                  const SizedBox(height: 30),
-                  // Image Picker
-                  GestureDetector(
-                    onTap: _localImagePicker,
-                    child: Container(
-                      width: 120,
-                      height: 120,
-                      decoration: BoxDecoration(
-                        color: AppColors.darkCard,
-                        borderRadius: BorderRadius.circular(60),
-                        border: Border.all(color: AppColors.primary, width: 2),
-                      ),
-                      child: _pickedImageBytes != null
-                          ? ClipRRect(
-                              borderRadius: BorderRadius.circular(60),
-                              child: Image.memory(
-                                _pickedImageBytes!,
-                                fit: BoxFit.cover,
-                              ),
-                            )
-                          : Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  IconlyLight.camera,
-                                  color: AppColors.primary,
-                                  size: 40,
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'Add Photo',
-                                  style: TextStyle(
-                                    color: Colors.white.withValues(alpha: 0.6),
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
+                  ).animate().fadeIn(delay: 200.ms),
+
+                  const SizedBox(height: 40),
+
+                  // Profile Image Picker
+                  Center(
+                    child: GestureDetector(
+                      onTap: _pickImage,
+                      child: Stack(
+                        children: [
+                          Container(
+                            width: 100,
+                            height: 100,
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.surfaceContainerLow,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: theme.colorScheme.primary.withOpacity(0.2), width: 4),
+                              image: _pickedImageBytes != null 
+                                ? DecorationImage(image: MemoryImage(_pickedImageBytes!), fit: BoxFit.cover)
+                                : null,
                             ),
+                            child: _pickedImageBytes == null 
+                              ? Icon(IconlyLight.profile, size: 40, color: theme.colorScheme.primary.withOpacity(0.5))
+                              : null,
+                          ),
+                          Positioned(
+                            right: 0,
+                            bottom: 0,
+                            child: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(color: theme.colorScheme.primary, shape: BoxShape.circle),
+                              child: const Icon(Icons.add_a_photo, color: Colors.white, size: 16),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 30),
-                  // Form
+                  ).animate().scale(delay: 400.ms, curve: Curves.backOut),
+
+                  const SizedBox(height: 40),
+
                   Form(
                     key: _formKey,
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        _buildTextField(
+                        _buildStyledField(
                           controller: _nameController,
                           focusNode: _nameFocusNode,
                           hint: 'Full Name',
-                          icon: Icons.person,
-                          textInputAction: TextInputAction.next,
-                          onFieldSubmitted: (value) {
-                            FocusScope.of(
-                              context,
-                            ).requestFocus(_emailFocusNode);
-                          },
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter your name';
-                            }
-                            return null;
-                          },
+                          icon: IconlyLight.profile,
+                          validator: (v) => v!.isEmpty ? 'Name is required' : null,
                         ),
                         const SizedBox(height: 16),
-                        _buildTextField(
+                        _buildStyledField(
                           controller: _emailController,
                           focusNode: _emailFocusNode,
-                          hint: 'Email address',
+                          hint: 'Email Address',
                           icon: IconlyLight.message,
                           keyboardType: TextInputType.emailAddress,
-                          textInputAction: TextInputAction.next,
-                          onFieldSubmitted: (value) {
-                            FocusScope.of(
-                              context,
-                            ).requestFocus(_passwordFocusNode);
-                          },
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter your email';
-                            }
-                            if (!RegExp(
-                              r'^[^@]+@[^@]+\.[^@]+',
-                            ).hasMatch(value)) {
-                              return 'Please enter a valid email';
-                            }
-                            return null;
-                          },
+                          validator: (v) => v!.isEmpty || !v.contains('@') ? 'Enter a valid email' : null,
                         ),
                         const SizedBox(height: 16),
-                        _buildTextField(
+                        _buildStyledField(
+                          controller: _phoneController,
+                          hint: 'Phone Number',
+                          icon: IconlyLight.call,
+                          keyboardType: TextInputType.phone,
+                          validator: (v) => v!.isEmpty ? 'Phone number is required' : null,
+                        ),
+                        const SizedBox(height: 16),
+                        _buildStyledField(
                           controller: _passwordController,
                           focusNode: _passwordFocusNode,
                           hint: 'Password',
                           icon: IconlyLight.lock,
                           obscureText: obscureText,
-                          textInputAction: TextInputAction.next,
-                          onFieldSubmitted: (value) {
-                            FocusScope.of(
-                              context,
-                            ).requestFocus(_repeatPasswordFocusNode);
-                          },
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              obscureText
-                                  ? Icons.visibility
-                                  : Icons.visibility_off,
-                              color: Colors.white.withValues(alpha: 0.5),
-                            ),
-                            onPressed: () {
-                              setState(() {
-                                obscureText = !obscureText;
-                              });
-                            },
+                          validator: (v) => v!.length < 6 ? 'Minimum 6 characters' : null,
+                          suffix: IconButton(
+                            icon: Icon(obscureText ? IconlyLight.hide : IconlyLight.show, size: 20),
+                            onPressed: () => setState(() => obscureText = !obscureText),
                           ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter a password';
-                            }
-                            if (value.length < 6) {
-                              return 'Password must be at least 6 characters';
-                            }
-                            return null;
-                          },
                         ),
                         const SizedBox(height: 16),
-                        _buildTextField(
+                        _buildStyledField(
                           controller: _repeatPasswordController,
                           focusNode: _repeatPasswordFocusNode,
                           hint: 'Confirm Password',
                           icon: IconlyLight.lock,
-                          obscureText: obscureText,
-                          textInputAction: TextInputAction.done,
-                          onFieldSubmitted: (value) async {
-                            await _registerFCT();
-                          },
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              obscureText
-                                  ? Icons.visibility
-                                  : Icons.visibility_off,
-                              color: Colors.white.withValues(alpha: 0.5),
-                            ),
-                            onPressed: () {
-                              setState(() {
-                                obscureText = !obscureText;
-                              });
-                            },
-                          ),
-                          validator: (value) {
-                            if (value != _passwordController.text) {
-                              return 'Passwords do not match';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 24),
-                        // Sign Up Button
-                        Container(
-                          height: 56,
-                          decoration: BoxDecoration(
-                            gradient: AppColors.primaryGradient,
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.primary.withValues(alpha: 0.3),
-                                blurRadius: 12,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: ElevatedButton.icon(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.transparent,
-                              shadowColor: Colors.transparent,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                            ),
-                            icon: const Icon(IconlyLight.add_user),
-                            label: const Text(
-                              'Sign Up',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            onPressed: isLoading
-                                ? null
-                                : () async => await _registerFCT(),
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        // Sign In Link
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              'Already have an account? ',
-                              style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.6),
-                                fontSize: 14,
-                              ),
-                            ),
-                            GestureDetector(
-                              onTap: () {
-                                Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => const LoginScreen(),
-                                  ),
-                                );
-                              },
-                              child: Text(
-                                'Sign In',
-                                style: TextStyle(
-                                  color: AppColors.primary,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                  decoration: TextDecoration.underline,
-                                ),
-                              ),
-                            ),
-                          ],
+                          obscureText: true,
+                          validator: (v) => v != _passwordController.text ? 'Passwords do not match' : null,
                         ),
                       ],
                     ),
+                  ).animate().fadeIn(delay: 600.ms).slideY(begin: 0.1, end: 0),
+
+                  const SizedBox(height: 40),
+
+                  SizedBox(
+                    height: 56,
+                    child: ElevatedButton(
+                      onPressed: isLoading ? null : _register,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: theme.colorScheme.primary,
+                        foregroundColor: theme.colorScheme.onPrimary,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      ),
+                      child: isLoading
+                        ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                        : const Text('Create Account', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    ),
+                  ).animate().fadeIn(delay: 800.ms),
+
+                  const SizedBox(height: 24),
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text('Already have an account?', style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
+                      TextButton(
+                        onPressed: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginScreen())),
+                        child: Text('Login', style: TextStyle(color: theme.colorScheme.primary, fontWeight: FontWeight.bold)),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 20),
+                  
+                  const SizedBox(height: 40),
                 ],
               ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
 
-  Widget _buildTextField({
+  Widget _buildStyledField({
     required TextEditingController controller,
-    required FocusNode focusNode,
+    FocusNode? focusNode,
     required String hint,
-    required dynamic icon,
-    TextInputType keyboardType = TextInputType.text,
+    required IconData icon,
     bool obscureText = false,
-    TextInputAction textInputAction = TextInputAction.next,
-    Widget? suffixIcon,
+    TextInputType? keyboardType,
     String? Function(String?)? validator,
-    Function(String)? onFieldSubmitted,
+    Widget? suffix,
   }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.darkCard,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.darkBorder),
-      ),
-      child: TextFormField(
-        controller: controller,
-        focusNode: focusNode,
-        keyboardType: keyboardType,
-        obscureText: obscureText,
-        textInputAction: textInputAction,
-        style: const TextStyle(color: Colors.white),
-        decoration: InputDecoration(
-          hintText: hint,
-          hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4)),
-          prefixIcon: icon is IconData
-              ? Icon(icon, color: Colors.white.withValues(alpha: 0.5))
-              : null,
-          suffixIcon: suffixIcon,
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 20,
-            vertical: 18,
-          ),
-        ),
-        onFieldSubmitted: onFieldSubmitted,
-        validator: validator,
+    final theme = Theme.of(context);
+    return TextFormField(
+      controller: controller,
+      focusNode: focusNode,
+      obscureText: obscureText,
+      keyboardType: keyboardType,
+      validator: validator,
+      decoration: InputDecoration(
+        hintText: hint,
+        prefixIcon: Icon(icon, size: 20),
+        suffixIcon: suffix,
+        filled: true,
+        fillColor: theme.colorScheme.surfaceContainerLow,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: theme.colorScheme.primary, width: 2)),
+        errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: theme.colorScheme.error, width: 1)),
       ),
     );
   }

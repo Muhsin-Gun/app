@@ -1,70 +1,106 @@
-
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../../../core/theme.dart';
-import '../../../../core/app_colors.dart';
-import '../../chat/screens/chat_screen.dart';
+import 'package:provider/provider.dart';
+import 'package:sizer/sizer.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import '../../../../providers/message_provider.dart';
+import '../../../../providers/auth_provider.dart';
+import '../../../../models/message_model.dart';
+import '../../../../models/user_model.dart';
+import '../../../../routing/app_router.dart';
+import '../../../../widgets/custom_icon_widget.dart';
+import '../../../../widgets/custom_image_widget.dart';
 
 class AdminMessagesScreen extends StatelessWidget {
   const AdminMessagesScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // In a real scalability scenario, you'd have a separate 'conversations' collection
-    // For this MVP, we query unique senders from 'messages' or just list Users who are 'client'
-    // Let's list clients for simplicity as "Start Chat" or "View Chat"
+    final theme = Theme.of(context);
     
     return Scaffold(
-      appBar: AppBar(title: const Text('Messages')),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('users')
-            .where('role', isEqualTo: 'client')
-            .snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
+      appBar: AppBar(
+        title: const Text('Messages', style: TextStyle(fontWeight: FontWeight.w900)),
+        centerTitle: false,
+      ),
+      body: Consumer<MessageProvider>(
+        builder: (context, provider, _) {
+          final conversations = provider.conversations;
+
+          if (provider.isLoading && conversations.isEmpty) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          final docs = snapshot.data?.docs ?? [];
-
-          if (docs.isEmpty) {
-            return const Center(child: Text('No clients found to chat with.'));
+          if (conversations.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                   Icon(Icons.forum_rounded, size: 64, color: theme.colorScheme.outlineVariant),
+                   SizedBox(height: 2.h),
+                   const Text('No active conversations', style: TextStyle(fontWeight: FontWeight.bold)),
+                ],
+              ),
+            );
           }
 
-          return ListView.builder(
-            itemCount: docs.length,
+          return ListView.separated(
+            padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 2.h),
+            itemCount: conversations.length,
+            separatorBuilder: (context, index) => const Divider(),
             itemBuilder: (context, index) {
-              final data = docs[index].data() as Map<String, dynamic>;
-              final userId = docs[index].id;
-              final email = data['email'] ?? '';
-              final name = data['name'] ?? 'Unknown User';
+              final conv = conversations[index];
+              final MessageModel lastMessage = conv['message'];
+              final UserModel? otherUser = conv['otherUser'];
+              final int unreadCount = conv['unreadCount'] ?? 0;
+              final name = otherUser?.name ?? 'User';
 
               return ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
-                  child: Text(name[0].toUpperCase()),
+                contentPadding: EdgeInsets.zero,
+                leading: CustomAvatarWidget(
+                  imageUrl: otherUser?.photoUrl,
+                  fallbackText: name[0],
+                  radius: 28,
                 ),
-                title: Text(name),
-                subtitle: Text(email),
-                trailing: const Icon(Icons.chat_bubble_outline),
-                onTap: () {
-                  // Navigate to chat with this specific user
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ChatScreen(
-                        otherUserId: userId,
-                        otherUserName: name,
+                title: Text(name, style: const TextStyle(fontWeight: FontWeight.w900)),
+                subtitle: Text(lastMessage.text, maxLines: 1, overflow: TextOverflow.ellipsis),
+                trailing: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(_formatTime(lastMessage.createdAt), style: theme.textTheme.bodySmall),
+                    if (unreadCount > 0)
+                      Container(
+                        margin: const EdgeInsets.only(top: 4),
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(color: theme.colorScheme.primary, shape: BoxShape.circle),
+                        child: Text(unreadCount.toString(), style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
                       ),
-                    ),
+                  ],
+                ),
+                onTap: () {
+                  final authProvider = context.read<AuthProvider>();
+                  Navigator.pushNamed(
+                    context,
+                    '/chat',
+                    arguments: {
+                      'otherUserId': otherUser?.uid ?? (lastMessage.senderId == authProvider.userId ? lastMessage.receiverId : lastMessage.senderId),
+                      'otherUserName': name,
+                    },
                   );
                 },
-              );
+              ).animate().fadeIn(delay: (index * 50).ms).slideX(begin: 0.05, end: 0);
             },
           );
         },
       ),
     );
+  }
+
+  String _formatTime(DateTime dt) {
+    final now = DateTime.now();
+    if (now.difference(dt).inDays == 0) {
+      return '${dt.hour}:${dt.minute.toString().padLeft(2, '0')}';
+    }
+    return '${dt.day}/${dt.month}';
   }
 }

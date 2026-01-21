@@ -3,20 +3,14 @@ import 'package:sizer/sizer.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
-
-import '../../core/app_colors.dart';
-import '../../core/utils/animations.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/booking_provider.dart';
-import '../../core/widgets/responsive_wrapper.dart';
-import '../../widgets/custom_icon_widget.dart';
 import '../../widgets/custom_image_widget.dart';
 import '../../models/product_model.dart';
 import '../../models/booking_model.dart';
 
 class BookingFormScreen extends StatefulWidget {
   final ProductModel product;
-
   const BookingFormScreen({super.key, required this.product});
 
   @override
@@ -33,11 +27,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
   String? _selectedTime;
   bool _isLoading = false;
 
-  final List<String> _timeSlots = [
-    '09:00 AM', '10:00 AM', '11:00 AM', 
-    '12:00 PM', '01:00 PM', '02:00 PM', 
-    '03:00 PM', '04:00 PM', '05:00 PM'
-  ];
+  final List<String> _timeSlots = ['09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '01:00 PM', '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM'];
 
   @override
   void dispose() {
@@ -50,38 +40,16 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
   Future<void> _submitBooking() async {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedTime == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a time slot'))
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select a time slot')));
       return;
     }
 
     setState(() => _isLoading = true);
-
     try {
       final authProvider = context.read<AuthProvider>();
       final bookingProvider = context.read<BookingProvider>();
       
-      if (authProvider.currentUser == null) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please sign in')));
-        return;
-      }
-
-      // Parse time
-      final timeParts = _selectedTime!.split(' ');
-      final hourMin = timeParts[0].split(':');
-      int hour = int.parse(hourMin[0]);
-      int minute = int.parse(hourMin[1]);
-      if (timeParts[1] == 'PM' && hour != 12) hour += 12;
-      if (timeParts[1] == 'AM' && hour == 12) hour = 0;
-
-      final scheduledDateTime = DateTime(
-        _selectedDate.year,
-        _selectedDate.month,
-        _selectedDate.day,
-        hour,
-        minute,
-      );
+      final scheduledDateTime = _combineDateAndTime(_selectedDate, _selectedTime!);
 
       final booking = BookingModel(
         id: '',
@@ -100,67 +68,50 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
       );
 
       final success = await bookingProvider.createBooking(booking);
-
       if (success && mounted) {
-        _showSuccessAnimation();
-      } else if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(bookingProvider.errorMessage ?? 'Booking failed'))
-        );
+        _showSuccessDialog();
       }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  void _showSuccessAnimation() {
+  DateTime _combineDateAndTime(DateTime date, String time) {
+    final timeParts = time.split(' ');
+    final hourMin = timeParts[0].split(':');
+    int hour = int.parse(hourMin[0]);
+    int minute = int.parse(hourMin[1]);
+    if (timeParts[1] == 'PM' && hour != 12) hour += 12;
+    if (timeParts[1] == 'AM' && hour == 12) hour = 0;
+    return DateTime(date.year, date.month, date.day, hour, minute);
+  }
+
+  void _showSuccessDialog() {
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
         child: Padding(
-          padding: EdgeInsets.all(6.w),
+          padding: EdgeInsets.all(8.w),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                Icons.check_circle,
-                color: AppColors.success,
-                size: 64,
-                semanticLabel: 'Success',
-              ).animate()
-                  .scale(duration: 400.ms, curve: Curves.easeOutBack)
-                  .fadeIn()
-                  .shimmer(duration: 1.seconds),
+              const Icon(Icons.check_circle_rounded, color: Colors.green, size: 80).animate().scale(duration: 400.ms, curve: Curves.bounceOut),
               SizedBox(height: 3.h),
-              Text(
-                'Booking Confirmed!',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
-              ),
+              const Text('Booking Confirmed!', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 22)),
               SizedBox(height: 1.h),
-              Text(
-                'We have received your request for ${widget.product.title}.',
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.grey),
-              ),
+              Text('Your professional will arrive on ${DateFormat('MMM dd').format(_selectedDate)} at $_selectedTime', textAlign: TextAlign.center, style: TextStyle(color: Colors.grey[600])),
               SizedBox(height: 4.h),
-              ScaleButton(
-                onTap: () {
-                  Navigator.pop(context); // Close dialog
-                  Navigator.pop(context); // Return to home
-                },
-                child: Container(
-                  width: double.infinity,
-                  height: 48,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Text('Great!', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    Navigator.pop(context);
+                  },
+                  style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.primary, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
+                  child: const Text('Great, thanks!', style: TextStyle(fontWeight: FontWeight.bold)),
                 ),
               ),
             ],
@@ -175,12 +126,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Book Service'),
-        backgroundColor: Colors.transparent,
-        foregroundColor: Colors.black,
-        elevation: 0,
-      ),
+      appBar: AppBar(title: const Text('Complete Booking', style: TextStyle(fontWeight: FontWeight.w900)), centerTitle: false),
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(horizontal: 6.w),
         child: Form(
@@ -189,58 +135,45 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SizedBox(height: 2.h),
-              // Header
-              Row(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: CustomImageWidget(
-                      imageUrl: widget.product.imageUrls.isNotEmpty ? widget.product.imageUrls.first : '',
-                      semanticLabel: 'Service image',
-                      width: 24.w,
-                      height: 24.w,
-                      fit: BoxFit.cover,
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(color: theme.colorScheme.surface, borderRadius: BorderRadius.circular(24), border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5))),
+                child: Row(
+                  children: [
+                    ClipRRect(borderRadius: BorderRadius.circular(16), child: CustomImageWidget(imageUrl: widget.product.imageUrls.isNotEmpty ? widget.product.imageUrls.first : '', width: 22.w, height: 22.w, fit: BoxFit.cover)),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(widget.product.title, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
+                          Text(widget.product.category, style: TextStyle(color: theme.colorScheme.primary, fontWeight: FontWeight.bold, fontSize: 12)),
+                          const SizedBox(height: 8),
+                          Text('\$${widget.product.price}', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 20)),
+                        ],
+                      ),
                     ),
-                  ),
-                  SizedBox(width: 4.w),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(widget.product.title, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
-                        Text(widget.product.category, style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w500)),
-                        SizedBox(height: 1.h),
-                        Text('\$${widget.product.price.toStringAsFixed(2)}', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 4.h),
+                  ],
+                ),
+              ).animate().fadeIn().slideY(begin: 0.1, end: 0),
 
-              // Date Selector
-              const Text('Select Date', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              SizedBox(height: 4.h),
+              const Text('Pick a Date', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18)).animate().fadeIn(delay: 100.ms),
               SizedBox(height: 2.h),
               SizedBox(
-                height: 12.h,
+                height: 100,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
                   itemCount: 14,
                   itemBuilder: (context, index) {
                     final date = DateTime.now().add(Duration(days: index + 1));
-                    final isSelected = date.day == _selectedDate.day && date.month == _selectedDate.month;
-                    
+                    final isSelected = date.day == _selectedDate.day;
                     return GestureDetector(
                       onTap: () => setState(() => _selectedDate = date),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        margin: EdgeInsets.only(right: 3.w),
-                        width: 18.w,
-                        decoration: BoxDecoration(
-                          color: isSelected ? AppColors.primary : Colors.grey.shade100,
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: isSelected ? [BoxShadow(color: AppColors.primary.withValues(alpha: 0.3), blurRadius: 8, offset: const Offset(0, 4))] : [],
-                        ),
+                      child: Container(
+                        width: 70,
+                        margin: const EdgeInsets.only(right: 12),
+                        decoration: BoxDecoration(color: isSelected ? theme.colorScheme.primary : theme.colorScheme.surface, borderRadius: BorderRadius.circular(20), border: Border.all(color: isSelected ? theme.colorScheme.primary : theme.colorScheme.outlineVariant)),
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -252,116 +185,85 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                     );
                   },
                 ),
-              ),
+              ).animate().fadeIn(delay: 200.ms),
 
               SizedBox(height: 4.h),
-
-              // Time Selector
-              const Text('Select Time', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const Text('Available Time', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18)).animate().fadeIn(delay: 300.ms),
               SizedBox(height: 2.h),
               Wrap(
-                spacing: 3.w,
-                runSpacing: 1.5.h,
+                spacing: 12,
+                runSpacing: 12,
                 children: _timeSlots.map((time) {
                   final isSelected = _selectedTime == time;
-                  return AppAnimations.scaleButton(
-                    isSelected ? 1.05 : 1.0,
-                    GestureDetector(
-                      onTap: () => setState(() => _selectedTime = time),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.2.h),
-                        decoration: BoxDecoration(
-                          color: isSelected ? AppColors.primary : Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: isSelected ? AppColors.primary : Colors.grey.shade300),
-                        ),
-                        child: Text(
-                          time,
-                          style: TextStyle(color: isSelected ? Colors.white : Colors.black, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal),
-                        ),
-                      ),
+                  return GestureDetector(
+                    onTap: () => setState(() => _selectedTime = time),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(color: isSelected ? theme.colorScheme.primaryContainer : theme.colorScheme.surface, borderRadius: BorderRadius.circular(12), border: Border.all(color: isSelected ? theme.colorScheme.primary : theme.colorScheme.outlineVariant)),
+                      child: Text(time, style: TextStyle(color: isSelected ? theme.colorScheme.onPrimaryContainer : Colors.black, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
                     ),
                   );
                 }).toList(),
-              ),
+              ).animate().fadeIn(delay: 400.ms),
 
               SizedBox(height: 4.h),
-
-              // Contact Details
-              const Text('Personal Details', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const Text('Address & Contact', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18)).animate().fadeIn(delay: 500.ms),
               SizedBox(height: 2.h),
-              TextFormField(
-                controller: _phoneController,
-                keyboardType: TextInputType.phone,
-                decoration: InputDecoration(
-                  labelText: 'Phone Number',
-                  prefixIcon: const Icon(Icons.phone_outlined),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-                validator: (v) => v!.isEmpty ? 'Required' : null,
-              ),
-              SizedBox(height: 2.h),
-              TextFormField(
-                controller: _addressController,
-                maxLines: 2,
-                decoration: InputDecoration(
-                  labelText: 'Service Address',
-                  prefixIcon: const Icon(Icons.location_on_outlined),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-                validator: (v) => v!.isEmpty ? 'Required' : null,
-              ),
-              SizedBox(height: 2.h),
-              TextFormField(
-                controller: _notesController,
-                maxLines: 3,
-                decoration: InputDecoration(
-                  labelText: 'Special Notes (Optional)',
-                  prefixIcon: const Icon(Icons.notes_outlined),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-              ),
-
-              SizedBox(height: 6.h),
+              _buildField('Phone Number', _phoneController, Icons.phone_rounded),
+              SizedBox(height: 16),
+              _buildField('Service Address', _addressController, Icons.location_on_rounded),
+              SizedBox(height: 16),
+              _buildField('Instructions (Optional)', _notesController, Icons.notes_rounded, maxLines: 3),
+              SizedBox(height: 12.h),
             ],
           ),
         ),
       ),
       bottomNavigationBar: Container(
-        padding: EdgeInsets.all(6.w),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, -5))],
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Total Price', style: TextStyle(color: Colors.grey, fontSize: 12)),
-                  Text('\$${widget.product.price.toStringAsFixed(2)}', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.primary)),
-                ],
-              ),
-            ),
-            ScaleButton(
-              onTap: _isLoading ? () {} : _submitBooking,
-              child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 1.5.h),
-                decoration: BoxDecoration(
-                  color: AppColors.primary,
-                  borderRadius: BorderRadius.circular(16),
+        padding: EdgeInsets.fromLTRB(6.w, 2.h, 6.w, 4.h),
+        decoration: BoxDecoration(color: theme.colorScheme.surface, boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, -5))]),
+        child: SafeArea(
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Price Quote', style: TextStyle(fontSize: 12)),
+                    Text('\$${widget.product.price}', style: TextStyle(color: theme.colorScheme.primary, fontWeight: FontWeight.w900, fontSize: 24)),
+                  ],
                 ),
-                child: _isLoading 
-                  ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                  : const Text('Confirm', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
               ),
-            ),
-          ],
+              const SizedBox(width: 16),
+              SizedBox(
+                width: 45.w,
+                height: 56,
+                child: ElevatedButton(
+                  onPressed: _isLoading ? null : _submitBooking,
+                  style: ElevatedButton.styleFrom(backgroundColor: theme.colorScheme.primary, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)), elevation: 0),
+                  child: _isLoading ? const CircularProgressIndicator(color: Colors.white) : const Text('Lock in Booking', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
+    );
+  }
+
+  Widget _buildField(String label, TextEditingController controller, IconData icon, {int maxLines = 1}) {
+    return TextFormField(
+      controller: controller,
+      maxLines: maxLines,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+        filled: true,
+        fillColor: Colors.grey[50],
+      ),
+      validator: (v) => v!.isEmpty && label != 'Instructions (Optional)' ? 'Required' : null,
     );
   }
 }
