@@ -44,41 +44,73 @@ class ManageEmployeesScreen extends StatelessWidget {
 
                 return Container(
                   margin: EdgeInsets.only(bottom: 2.h),
-                  padding: EdgeInsets.all(4.w),
-                  decoration: BoxDecoration(color: theme.colorScheme.surface, borderRadius: BorderRadius.circular(24), border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5))),
+                  padding: EdgeInsets.all(5.w),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surface,
+                    borderRadius: BorderRadius.circular(28),
+                    border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: theme.shadowColor.withValues(alpha: 0.03),
+                        blurRadius: 15,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                  ),
                   child: Column(
                     children: [
                       Row(
                         children: [
-                          CustomAvatarWidget(imageUrl: employee.photoUrl, fallbackText: employee.name[0], radius: 28),
+                          Container(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(color: employee.isActive ? Colors.green.withValues(alpha: 0.5) : Colors.red.withValues(alpha: 0.5), width: 2),
+                            ),
+                            child: CustomAvatarWidget(imageUrl: employee.photoUrl, fallbackText: employee.name[0], radius: 30),
+                          ),
                           const SizedBox(width: 16),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(employee.name, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
+                                Text(employee.name, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18, letterSpacing: -0.5)),
                                 Text(employee.email, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
                                 SizedBox(height: 0.5.h),
-                                Row(
-                                  children: [
-                                    Container(width: 8, height: 8, decoration: BoxDecoration(color: employee.isActive ? Colors.green : Colors.red, shape: BoxShape.circle)),
-                                    const SizedBox(width: 6),
-                                    Text(employee.isActive ? 'Active' : 'Inactive', style: TextStyle(color: employee.isActive ? Colors.green : Colors.red, fontSize: 10, fontWeight: FontWeight.bold)),
-                                  ],
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: (employee.isActive ? Colors.green : Colors.red).withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Container(width: 6, height: 6, decoration: BoxDecoration(color: employee.isActive ? Colors.green : Colors.red, shape: BoxShape.circle)),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        employee.isActive ? 'Active' : 'Offline',
+                                        style: TextStyle(color: employee.isActive ? Colors.green : Colors.red, fontSize: 10, fontWeight: FontWeight.black, letterSpacing: 0.5),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ],
                             ),
                           ),
-                          Switch.adaptive(value: employee.isActive, onChanged: (v) => provider.toggleEmployeeStatus(employee.uid, v)),
+                          Switch.adaptive(
+                            value: employee.isActive,
+                            onChanged: (v) => provider.toggleEmployeeStatus(employee.uid, v),
+                            activeColor: Colors.green,
+                          ),
                         ],
                       ),
-                      const Divider(height: 32),
+                      const Padding(padding: EdgeInsets.symmetric(vertical: 16), child: Divider(height: 1)),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
-                          _buildStat(context, 'Jobs', stats['totalBookings']?.toString() ?? '0', Icons.assignment_rounded, Colors.blue),
+                          _buildStat(context, 'Total Jobs', stats['totalBookings']?.toString() ?? '0', Icons.assignment_rounded, Colors.blue),
                           _buildStat(context, 'Rating', '4.9', Icons.star_rounded, Colors.orange),
-                          _buildStat(context, 'Success', '${stats['completionRate'] ?? 0}%', Icons.check_circle_rounded, Colors.green),
+                          _buildStat(context, 'Job Success', '${stats['completionRate'] ?? 0}%', Icons.check_circle_rounded, Colors.green),
                         ],
                       ),
                     ],
@@ -96,15 +128,20 @@ class ManageEmployeesScreen extends StatelessWidget {
     final theme = Theme.of(context);
     return Column(
       children: [
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 12, color: color),
-            const SizedBox(width: 4),
-            Text(value, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14)),
-          ],
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 14, color: color),
+              const SizedBox(width: 6),
+              Text(value, style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: color)),
+            ],
+          ),
         ),
-        Text(label, style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+        SizedBox(height: 0.5.h),
+        Text(label, style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurfaceVariant, fontWeight: FontWeight.bold, fontSize: 10)),
       ],
     );
   }

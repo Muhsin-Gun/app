@@ -169,20 +169,31 @@ class _ManageServicesScreenState extends State<ManageServicesScreen> {
                 Row(
                   children: [
                     Expanded(child: _buildField('Price', _priceController, Icons.payments_outlined, isNumber: true, prefix: '$')),
-                    SizedBox(width: 4.w),
-                    Expanded(
-                      child: DropdownButtonFormField<String>(
-                        value: _selectedCategory,
-                        items: _categories.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
-                        onChanged: (v) => setModalState(() => _selectedCategory = v!),
-                        decoration: InputDecoration(
-                          labelText: 'Category',
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                        ),
-                      ),
-                    ),
                   ],
+                ),
+                SizedBox(height: 3.h),
+                Text('Category', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
+                SizedBox(height: 1.h),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 0,
+                  children: _categories.map((c) {
+                    final isSelected = _selectedCategory == c;
+                    return ChoiceChip(
+                      label: Text(c),
+                      selected: isSelected,
+                      onSelected: (selected) {
+                        if (selected) setModalState(() => _selectedCategory = c);
+                      },
+                      selectedColor: theme.colorScheme.primary.withValues(alpha: 0.2),
+                      labelStyle: TextStyle(
+                        color: isSelected ? theme.colorScheme.primary : theme.colorScheme.onSurface,
+                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      ),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      showCheckmark: false,
+                    );
+                  }).toList(),
                 ),
                 SizedBox(height: 2.h),
                 _buildField('Description', _descController, Icons.description_outlined, maxLines: 3),
@@ -255,49 +266,97 @@ class _ManageServicesScreenState extends State<ManageServicesScreen> {
                 final product = products[index];
                 return Container(
                   margin: EdgeInsets.only(bottom: 2.h),
-                  decoration: BoxDecoration(color: theme.colorScheme.surface, borderRadius: BorderRadius.circular(24), border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5))),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surface,
+                    borderRadius: BorderRadius.circular(28),
+                    border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: theme.shadowColor.withValues(alpha: 0.03),
+                        blurRadius: 15,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  clipBehavior: Clip.antiAlias,
                   child: Column(
                     children: [
-                      ClipRRect(
-                        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-                        child: CustomImageWidget(
-                          imageUrl: product.imageUrls.isNotEmpty ? product.imageUrls.first : '',
-                          height: 18.h,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                          semanticLabel: 'Service image for ${product.title}',
-                        ),
+                      Stack(
+                        children: [
+                          CustomImageWidget(
+                            imageUrl: product.imageUrls.isNotEmpty ? product.imageUrls.first : '',
+                            height: 20.h,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                            semanticLabel: 'Service image for ${product.title}',
+                          ),
+                          Positioned(
+                            top: 12,
+                            left: 12,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withValues(alpha: 0.4),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                              ),
+                              child: Text(
+                                product.category,
+                                style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                       Padding(
-                        padding: EdgeInsets.all(4.w),
+                        padding: EdgeInsets.all(5.w),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                  decoration: BoxDecoration(color: theme.colorScheme.primaryContainer, borderRadius: BorderRadius.circular(10)),
-                                  child: Text(product.category, style: TextStyle(color: theme.colorScheme.onPrimaryContainer, fontSize: 10, fontWeight: FontWeight.bold)),
+                                Expanded(
+                                  child: Text(
+                                    product.title,
+                                    style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18, letterSpacing: -0.5),
+                                  ),
                                 ),
-                                Text('\$${product.price.toStringAsFixed(2)}', style: TextStyle(color: theme.colorScheme.primary, fontWeight: FontWeight.w900, fontSize: 18)),
+                                Text(
+                                  '\$${product.price.toStringAsFixed(2)}',
+                                  style: TextStyle(color: theme.colorScheme.primary, fontWeight: FontWeight.w900, fontSize: 20),
+                                ),
                               ],
                             ),
-                            SizedBox(height: 1.h),
-                            Text(product.title, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
-                            Text(product.description, maxLines: 2, overflow: TextOverflow.ellipsis, style: theme.textTheme.bodySmall),
-                            const Divider(height: 24),
+                            SizedBox(height: 0.5.h),
+                            Text(
+                              product.description,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant, height: 1.3),
+                            ),
+                            const SizedBox(height: 16),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.end,
                               children: [
-                                TextButton.icon(onPressed: () => _showServiceForm(product: product), icon: const Icon(Icons.edit_rounded, size: 18), label: const Text('Edit')),
-                                SizedBox(width: 4.w),
-                                TextButton.icon(
+                                OutlinedButton.icon(
+                                  onPressed: () => _showServiceForm(product: product),
+                                  icon: const Icon(Icons.edit_rounded, size: 16),
+                                  label: const Text('Edit'),
+                                  style: OutlinedButton.styleFrom(
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                  ),
+                                ),
+                                SizedBox(width: 3.w),
+                                IconButton.filledTonal(
                                   onPressed: () => _handleDelete(context, product),
                                   icon: const Icon(Icons.delete_outline_rounded, size: 18),
-                                  label: const Text('Delete'),
-                                  style: TextButton.styleFrom(foregroundColor: Colors.red),
+                                  style: IconButton.styleFrom(
+                                    foregroundColor: theme.colorScheme.error,
+                                    backgroundColor: theme.colorScheme.errorContainer.withValues(alpha: 0.5),
+                                  ),
                                 ),
                               ],
                             ),
@@ -305,7 +364,8 @@ class _ManageServicesScreenState extends State<ManageServicesScreen> {
                         ),
                       ),
                     ],
-                  ).animate().fadeIn(delay: (index * 50).ms).slideX(begin: 0.05, end: 0),
+                  ),
+                ).animate().fadeIn(delay: (index * 50).ms).slideX(begin: 0.05, end: 0);,
                 );
               },
             ),

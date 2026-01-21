@@ -95,14 +95,19 @@ class ClientHomePage extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Welcome, ${authProvider.userName?.split(' ').first ?? 'User'}!',
-                          style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900, letterSpacing: -0.5),
+                          _getGreeting(),
+                          style: theme.textTheme.labelMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant, fontWeight: FontWeight.bold, letterSpacing: 0.5),
                         ),
+                        Text(
+                          '${authProvider.userName?.split(' ').first ?? 'User'}!',
+                          style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900, letterSpacing: -0.8, fontSize: 26),
+                        ),
+                        SizedBox(height: 4),
                         Row(
                           children: [
                             Icon(Icons.location_on_rounded, size: 14, color: theme.colorScheme.primary),
                             SizedBox(width: 4),
-                            Text('Nairobi, Kenya', style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+                            Text('Nairobi, Kenya', style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant, fontWeight: FontWeight.w600)),
                           ],
                         ),
                       ],
@@ -119,20 +124,27 @@ class ClientHomePage extends StatelessWidget {
 
                 // Search Bar
                 Container(
-                  padding: EdgeInsets.symmetric(horizontal: 4.w),
+                  padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 0.5.h),
                   decoration: BoxDecoration(
                     color: theme.colorScheme.surface,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5)),
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4)),
                     boxShadow: [
-                      BoxShadow(color: theme.shadowColor.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4)),
+                      BoxShadow(color: theme.shadowColor.withValues(alpha: 0.04), blurRadius: 20, offset: const Offset(0, 10)),
                     ],
                   ),
                   child: TextField(
                     decoration: InputDecoration(
                       hintText: 'Search for services...',
+                      hintStyle: TextStyle(color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6)),
                       border: InputBorder.none,
-                      icon: Icon(Icons.search_rounded, color: theme.colorScheme.onSurfaceVariant),
+                      icon: Icon(Icons.search_rounded, color: theme.colorScheme.primary),
+                      suffixIcon: Container(
+                        margin: const EdgeInsets.all(8),
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(color: theme.colorScheme.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
+                        child: Icon(Icons.tune_rounded, size: 18, color: theme.colorScheme.primary),
+                      ),
                     ),
                   ),
                 ).animate().fadeIn(delay: 100.ms).slideY(begin: 0.1, end: 0),
@@ -175,6 +187,13 @@ class ClientHomePage extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _getGreeting() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return 'GOOD MORNING';
+    if (hour < 17) return 'GOOD AFTERNOON';
+    return 'GOOD EVENING';
   }
 }
 
@@ -291,33 +310,47 @@ class _ServiceCard extends StatelessWidget {
       onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ServiceDetailsScreen(product: product))),
       borderRadius: BorderRadius.circular(24),
       child: Container(
-        width: 70.w,
+        width: 72.w,
         decoration: BoxDecoration(
           color: theme.colorScheme.surface,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5)),
+          borderRadius: BorderRadius.circular(32),
+          border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4)),
+          boxShadow: [
+            BoxShadow(color: theme.shadowColor.withValues(alpha: 0.03), blurRadius: 15, offset: const Offset(0, 8)),
+          ],
         ),
+        clipBehavior: Clip.antiAlias,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
               child: Stack(
                 children: [
-                  ClipRRect(
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-                    child: CustomImageWidget(imageUrl: product.imageUrls.isNotEmpty ? product.imageUrls.first : '', width: double.infinity, fit: BoxFit.cover),
+                  CustomImageWidget(imageUrl: product.imageUrls.isNotEmpty ? product.imageUrls.first : '', width: double.infinity, height: double.infinity, fit: BoxFit.cover),
+                  Positioned(
+                    top: 12,
+                    left: 12,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.4),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                      ),
+                      child: Text(product.category, style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                    ),
                   ),
                   Positioned(
                     top: 12,
                     right: 12,
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(12)),
+                      decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.9), borderRadius: BorderRadius.circular(12)),
                       child: Row(
                         children: [
                           const Icon(Icons.star_rounded, color: Colors.orange, size: 14),
                           const SizedBox(width: 4),
-                          Text(product.rating.toString(), style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                          Text(product.rating.toString(), style: const TextStyle(color: Colors.black, fontSize: 12, fontWeight: FontWeight.bold)),
                         ],
                       ),
                     ),
@@ -326,14 +359,24 @@ class _ServiceCard extends StatelessWidget {
               ),
             ),
             Padding(
-              padding: EdgeInsets.all(4.w),
+              padding: EdgeInsets.all(5.w),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(product.title, style: const TextStyle(fontWeight: FontWeight.w900), maxLines: 1, overflow: TextOverflow.ellipsis),
-                  Text(product.description, style: theme.textTheme.bodySmall, maxLines: 1, overflow: TextOverflow.ellipsis),
-                  SizedBox(height: 1.h),
-                  Text(product.formattedPrice, style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.w900)),
+                  Text(product.title, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, letterSpacing: -0.5), maxLines: 1, overflow: TextOverflow.ellipsis),
+                  Text(product.description, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant), maxLines: 1, overflow: TextOverflow.ellipsis),
+                  SizedBox(height: 1.5.h),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(product.formattedPrice, style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.w900, fontSize: 18)),
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(color: theme.colorScheme.primary, shape: BoxShape.circle),
+                        child: const Icon(Icons.add_rounded, color: Colors.white, size: 16),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -493,48 +536,66 @@ class ClientProfilePage extends StatelessWidget {
     final authProvider = context.watch<AuthProvider>();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('My Space', style: TextStyle(fontWeight: FontWeight.w900)), centerTitle: false),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 2.h),
-        child: Column(
-          children: [
-            Container(
-              padding: EdgeInsets.all(6.w),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary,
-                borderRadius: BorderRadius.circular(32),
-                boxShadow: [
-                  BoxShadow(color: theme.colorScheme.primary.withValues(alpha: 0.2), blurRadius: 15, offset: const Offset(0, 8)),
-                ],
-              ),
-              child: Row(
-                children: [
-                  CustomAvatarWidget(imageUrl: authProvider.userPhotoUrl, fallbackText: authProvider.userName ?? 'U', radius: 36),
-                  const SizedBox(width: 20),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(authProvider.userName ?? 'User', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 20)),
-                        Text(authProvider.currentUser?.email ?? '', style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 12)),
-                      ],
-                    ),
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            expandedHeight: 25.h,
+            pinned: true,
+            flexibleSpace: FlexibleSpaceBar(
+              background: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [theme.colorScheme.primary, theme.colorScheme.secondary],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
+                ),
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SizedBox(height: 4.h),
+                      CustomAvatarWidget(
+                        imageUrl: authProvider.userPhotoUrl,
+                        fallbackText: authProvider.userName ?? 'U',
+                        radius: 45,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        authProvider.userName ?? 'User',
+                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 24),
+                      ),
+                      Text(
+                        authProvider.currentUser?.email ?? '',
+                        style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 13),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 3.h),
+              child: Column(
+                children: [
+                  _buildSection(theme, 'Preferences', [
+                    _ProfileItem(icon: Icons.dark_mode_rounded, title: 'App Theme', trailing: Switch.adaptive(value: theme.brightness == Brightness.dark, onChanged: (v) => authProvider.toggleTheme())),
+                    _ProfileItem(icon: Icons.notifications_active_rounded, title: 'Push Notifications', onTap: () {}),
+                  ]),
+                  SizedBox(height: 3.h),
+                  _buildSection(theme, 'Account Settings', [
+                    _ProfileItem(icon: Icons.shield_rounded, title: 'Privacy & Security', onTap: () {}),
+                    _ProfileItem(icon: Icons.history_rounded, title: 'Payment History', onTap: () {}),
+                    _ProfileItem(icon: Icons.logout_rounded, title: 'Sign Out', color: Colors.pink, showArrow: false, onTap: () => _handleLogout(context)),
+                  ]),
+                  SizedBox(height: 5.h),
                 ],
               ),
             ),
-            SizedBox(height: 4.h),
-            _buildSection(theme, 'Experience', [
-              _ProfileItem(icon: Icons.dark_mode_rounded, title: 'Dark Mode', trailing: Switch(value: theme.brightness == Brightness.dark, onChanged: (v) => authProvider.toggleTheme())),
-              _ProfileItem(icon: Icons.notifications_rounded, title: 'Notifications', onTap: () {}),
-            ]),
-            SizedBox(height: 2.h),
-            _buildSection(theme, 'Account', [
-              _ProfileItem(icon: Icons.security_rounded, title: 'Security', onTap: () {}),
-              _ProfileItem(icon: Icons.logout_rounded, title: 'Logout', color: Colors.red, showArrow: false, onTap: () => _handleLogout(context)),
-            ]),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

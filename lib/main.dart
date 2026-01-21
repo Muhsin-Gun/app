@@ -13,6 +13,7 @@ import 'providers/chat_provider.dart';
 import 'providers/message_provider.dart';
 import 'providers/employee_provider.dart';
 import 'providers/marketplace_provider.dart';
+import 'providers/payment_provider.dart';
 import 'routing/app_router.dart';
 
 void main() async {
@@ -51,6 +52,7 @@ class ProMarketApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ChatProvider()),
         ChangeNotifierProvider(create: (_) => MessageProvider()),
         ChangeNotifierProvider(create: (_) => MarketplaceProvider()),
+        ChangeNotifierProvider(create: (_) => PaymentProvider()),
       ],
       child: Sizer(
         builder: (context, orientation, deviceType) {

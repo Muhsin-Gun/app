@@ -2,20 +2,25 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // --- HELPERS ---
     function isSignedIn() {
       return request.auth != null;
     }
+    
+    function userDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
 
-    function getUserData() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    function hasUserDoc() {
+      return isSignedIn() && userDoc().exists();
     }
 
     function isAdmin() {
-      return isSignedIn() && getUserData().role == 'admin';
+      return hasUserDoc() && userDoc().data.role == 'admin';
     }
 
     function isEmployee() {
-      return isSignedIn() && getUserData().role == 'employee';
+      return hasUserDoc() && userDoc().data.role == 'employee';
     }
 
     function isOwner(userId) {
@@ -24,8 +29,8 @@ service cloud.firestore {
 
     // --- USERS ---
     match /users/{userId} {
-      allow read: if isSignedIn() && (isOwner(userId) || isAdmin() || isEmployee());
-      allow write: if isSignedIn() && (isOwner(userId) || isAdmin());
+      allow read: if isOwner(userId) || isAdmin() || isEmployee();
+      allow write: if isOwner(userId) || isAdmin();
     }
 
     // --- PRODUCTS ---
@@ -57,11 +62,10 @@ service cloud.firestore {
     match /messages/{messageId} {
       allow read: if isSignedIn() && (
         resource.data.senderId == request.auth.uid ||
-        resource.data.receiverId == request.auth.uid ||
-        isAdmin()
+        resource.data.receiverId == request.auth.uid
       );
 
-      allow create: if isSignedIn() && 
+      allow create: if isSignedIn() &&
         request.resource.data.senderId == request.auth.uid;
     }
 

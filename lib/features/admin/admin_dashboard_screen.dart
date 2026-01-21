@@ -17,6 +17,7 @@ import 'screens/manage_services_screen.dart';
 import 'screens/manage_employees_screen.dart';
 import 'screens/admin_bookings_screen.dart';
 import 'screens/admin_messages_screen.dart';
+import 'screens/admin_analytics_screen.dart';
 import '../../models/message_model.dart';
 import '../../models/user_model.dart';
 
@@ -211,10 +212,10 @@ class AdminDashboardPage extends StatelessWidget {
                 SizedBox(width: 4.w),
                 Expanded(
                   child: _QuickActionCard(
-                    title: 'Check Logic',
+                    title: 'Analytics',
                     icon: 'analytics',
                     color: theme.colorScheme.secondary,
-                    onTap: () => context.findAncestorStateOfType<_AdminDashboardScreenState>()?._onBottomNavTap(2),
+                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminAnalyticsScreen())),
                   ),
                 ),
               ],

@@ -5,6 +5,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/booking_provider.dart';
+import '../../providers/payment_provider.dart';
 import '../../widgets/custom_image_widget.dart';
 import '../../models/product_model.dart';
 import '../../models/booking_model.dart';
@@ -26,6 +27,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
   DateTime _selectedDate = DateTime.now().add(const Duration(days: 1));
   String? _selectedTime;
   bool _isLoading = false;
+  String _paymentMethod = 'Cash'; // 'Cash' or 'M-Pesa'
 
   final List<String> _timeSlots = ['09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '01:00 PM', '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM'];
 
@@ -48,8 +50,25 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
     try {
       final authProvider = context.read<AuthProvider>();
       final bookingProvider = context.read<BookingProvider>();
+      final paymentProvider = context.read<PaymentProvider>();
       
       final scheduledDateTime = _combineDateAndTime(_selectedDate, _selectedTime!);
+
+      // Handle M-Pesa payment if selected
+      if (_paymentMethod == 'M-Pesa') {
+        final paymentSuccess = await paymentProvider.processMpesaPayment(
+          phoneNumber: _phoneController.text.trim(),
+          amount: widget.product.price,
+          reference: widget.product.title,
+        );
+        
+        if (!paymentSuccess && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(paymentProvider.errorMessage ?? 'Payment initiation failed')),
+          );
+          return;
+        }
+      }
 
       final booking = BookingModel(
         id: '',
@@ -214,6 +233,16 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
               _buildField('Service Address', _addressController, Icons.location_on_rounded),
               SizedBox(height: 16),
               _buildField('Instructions (Optional)', _notesController, Icons.notes_rounded, maxLines: 3),
+              SizedBox(height: 4.h),
+              const Text('Payment Method', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18)).animate().fadeIn(delay: 600.ms),
+              SizedBox(height: 2.h),
+              Row(
+                children: [
+                  _buildPaymentOption('Cash', Icons.payments_outlined, theme),
+                  SizedBox(width: 4.w),
+                  _buildPaymentOption('M-Pesa', Icons.phone_android_rounded, theme),
+                ],
+              ).animate().fadeIn(delay: 700.ms),
               SizedBox(height: 12.h),
             ],
           ),
@@ -264,6 +293,30 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
         fillColor: Colors.grey[50],
       ),
       validator: (v) => v!.isEmpty && label != 'Instructions (Optional)' ? 'Required' : null,
+    );
+  }
+
+  Widget _buildPaymentOption(String method, IconData icon, ThemeData theme) {
+    final isSelected = _paymentMethod == method;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => setState(() => _paymentMethod = method),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          decoration: BoxDecoration(
+            color: isSelected ? theme.colorScheme.primary.withValues(alpha: 0.1) : theme.colorScheme.surface,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: isSelected ? theme.colorScheme.primary : theme.colorScheme.outlineVariant),
+          ),
+          child: Column(
+            children: [
+              Icon(icon, color: isSelected ? theme.colorScheme.primary : Colors.grey, size: 28),
+              const SizedBox(height: 8),
+              Text(method, style: TextStyle(fontWeight: FontWeight.bold, color: isSelected ? theme.colorScheme.primary : Colors.black)),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

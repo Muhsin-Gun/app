@@ -141,26 +141,53 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Widget _buildInputArea(ThemeData theme) {
     return Container(
-      padding: EdgeInsets.fromLTRB(20, 12, 20, 12 + MediaQuery.of(context).padding.bottom),
-      decoration: BoxDecoration(color: theme.colorScheme.surface, border: Border(top: BorderSide(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5)))),
+      padding: EdgeInsets.fromLTRB(16, 12, 16, 12 + MediaQuery.of(context).padding.bottom),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, -5)),
+        ],
+      ),
       child: Row(
         children: [
-          IconButton(onPressed: () {}, icon: const Icon(Icons.add_rounded)),
+          Container(
+            decoration: BoxDecoration(color: theme.colorScheme.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
+            child: IconButton(onPressed: () {}, icon: Icon(Icons.add_rounded, color: theme.colorScheme.primary)),
+          ),
+          const SizedBox(width: 12),
           Expanded(
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              decoration: BoxDecoration(color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5), borderRadius: BorderRadius.circular(24)),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(28),
+                border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3)),
+              ),
               child: TextField(
                 controller: _messageController,
-                decoration: const InputDecoration(hintText: 'Message...', border: InputBorder.none),
+                decoration: const InputDecoration(
+                  hintText: 'Type a message...',
+                  hintStyle: TextStyle(fontSize: 14),
+                  border: InputBorder.none,
+                ),
                 onSubmitted: (_) => _sendMessage(),
               ),
             ),
           ),
           const SizedBox(width: 12),
-          CircleAvatar(
-            backgroundColor: theme.colorScheme.primary,
-            child: IconButton(onPressed: _sendMessage, icon: const Icon(Icons.send_rounded, color: Colors.white, size: 20)),
+          GestureDetector(
+            onTap: _sendMessage,
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(colors: [theme.colorScheme.primary, theme.colorScheme.secondary]),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(color: theme.colorScheme.primary.withValues(alpha: 0.3), blurRadius: 8, offset: const Offset(0, 4)),
+                ],
+              ),
+              child: const Icon(Icons.send_rounded, color: Colors.white, size: 20),
+            ),
           ),
         ],
       ),
@@ -178,32 +205,62 @@ class _MessageBubble extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.only(bottom: 12),
       child: Align(
         alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
         child: Column(
           crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
           children: [
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              constraints: BoxConstraints(maxWidth: 75.w),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+              constraints: BoxConstraints(maxWidth: 78.w),
               decoration: BoxDecoration(
-                color: isMe ? theme.colorScheme.primary : theme.colorScheme.surface,
+                gradient: isMe ? LinearGradient(
+                  colors: [theme.colorScheme.primary, theme.colorScheme.primary.withValues(alpha: 0.85)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ) : null,
+                color: isMe ? null : theme.colorScheme.surface,
                 borderRadius: BorderRadius.only(
-                  topLeft: const Radius.circular(20),
-                  topRight: const Radius.circular(20),
-                  bottomLeft: Radius.circular(isMe ? 20 : 4),
-                  bottomRight: Radius.circular(isMe ? 4 : 20),
+                  topLeft: const Radius.circular(24),
+                  topRight: const Radius.circular(24),
+                  bottomLeft: Radius.circular(isMe ? 24 : 4),
+                  bottomRight: Radius.circular(isMe ? 4 : 24),
                 ),
-                border: isMe ? null : Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: isMe ? 0.1 : 0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+                border: isMe ? null : Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4)),
               ),
-              child: Text(message.text, style: TextStyle(color: isMe ? Colors.white : Colors.black, fontSize: 16)),
+              child: Text(
+                message.text,
+                style: TextStyle(
+                  color: isMe ? Colors.white : theme.colorScheme.onSurface,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                  letterSpacing: 0.2,
+                ),
+              ),
             ),
-            const SizedBox(height: 4),
-            Text(DateFormat('h:mm a').format(message.createdAt), style: theme.textTheme.labelSmall?.copyWith(fontSize: 9)),
+            const SizedBox(height: 6),
+            Padding(
+              padding: EdgeInsets.only(right: isMe ? 8 : 0, left: isMe ? 0 : 8),
+              child: Text(
+                DateFormat('h:mm a').format(message.createdAt),
+                style: theme.textTheme.labelSmall?.copyWith(
+                  fontSize: 10,
+                  color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
           ],
         ),
-      ).animate().fadeIn(duration: 200.ms).slideX(begin: isMe ? 0.1 : -0.1, end: 0),
+      ).animate().fadeIn(duration: 400.ms, curve: Curves.easeOut).slideX(begin: isMe ? 0.05 : -0.05, end: 0, curve: Curves.easeOut),
     );
   }
 }
