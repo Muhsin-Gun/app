@@ -32,6 +32,8 @@ class AuthProvider extends ChangeNotifier {
   String? get userName => _userModel?.name ?? _firebaseUser?.displayName;
   String? get userEmail => _userModel?.email ?? _firebaseUser?.email;
   String? get userPhotoUrl => _userModel?.photoUrl ?? _firebaseUser?.photoURL;
+  bool get isApproved => _userModel?.isApproved ?? false;
+  bool get profileCompleted => _userModel?.profileCompleted ?? false;
 
   // Role checks
   bool get isAdmin => _userModel?.isAdmin ?? false;
@@ -478,7 +480,7 @@ class AuthProvider extends ChangeNotifier {
 
   // Check if user needs onboarding
   bool needsOnboarding() {
-    return _firebaseUser != null && _userModel == null;
+    return _firebaseUser != null && (_userModel == null || !_userModel!.profileCompleted);
   }
 
   // Complete onboarding by setting user role

@@ -149,6 +149,9 @@ class AuthService {
           role: role,
           photoUrl: userCredential.user!.photoURL,
           createdAt: DateTime.now(),
+          isEmailVerified: userCredential.user!.emailVerified,
+          isApproved: role == 'client', // Clients auto-approved, others need admin approval
+          profileCompleted: false,
         );
         
         await _firestoreService.createUser(userModel);
@@ -192,6 +195,9 @@ class AuthService {
           role: 'client', // Default role for new users
           photoUrl: user.photoURL,
           createdAt: DateTime.now(),
+          isEmailVerified: user.emailVerified,
+          isApproved: true, // Clients auto-approved
+          profileCompleted: false,
         );
         
         await _firestoreService.createUser(userModel);

@@ -10,6 +10,9 @@ class UserModel {
   final DateTime createdAt;
   final DateTime? updatedAt;
   final bool isActive;
+  final bool isEmailVerified;
+  final bool isApproved;
+  final bool profileCompleted;
   final Map<String, dynamic>? metadata;
 
   UserModel({
@@ -22,6 +25,9 @@ class UserModel {
     required this.createdAt,
     this.updatedAt,
     this.isActive = true,
+    this.isEmailVerified = false,
+    this.isApproved = false,
+    this.profileCompleted = false,
     this.metadata,
   });
 
@@ -37,6 +43,9 @@ class UserModel {
       'createdAt': Timestamp.fromDate(createdAt),
       'updatedAt': updatedAt != null ? Timestamp.fromDate(updatedAt!) : null,
       'isActive': isActive,
+      'isEmailVerified': isEmailVerified,
+      'isApproved': isApproved,
+      'profileCompleted': profileCompleted,
       'metadata': metadata,
     };
   }
@@ -53,6 +62,9 @@ class UserModel {
       createdAt: (map['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       updatedAt: (map['updatedAt'] as Timestamp?)?.toDate(),
       isActive: map['isActive'] ?? true,
+      isEmailVerified: map['isEmailVerified'] ?? false,
+      isApproved: map['isApproved'] ?? false,
+      profileCompleted: map['profileCompleted'] ?? false,
       metadata: map['metadata'],
     );
   }
@@ -74,6 +86,9 @@ class UserModel {
     DateTime? createdAt,
     DateTime? updatedAt,
     bool? isActive,
+    bool? isEmailVerified,
+    bool? isApproved,
+    bool? profileCompleted,
     Map<String, dynamic>? metadata,
   }) {
     return UserModel(
@@ -86,6 +101,9 @@ class UserModel {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       isActive: isActive ?? this.isActive,
+      isEmailVerified: isEmailVerified ?? this.isEmailVerified,
+      isApproved: isApproved ?? this.isApproved,
+      profileCompleted: profileCompleted ?? this.profileCompleted,
       metadata: metadata ?? this.metadata,
     );
   }
@@ -131,7 +149,7 @@ class UserModel {
 
   @override
   String toString() {
-    return 'UserModel(uid: $uid, name: $name, email: $email, role: $role, isActive: $isActive)';
+    return 'UserModel(uid: $uid, name: $name, email: $email, role: $role, isActive: $isActive, isApproved: $isApproved, profileCompleted: $profileCompleted)';
   }
 
   @override
@@ -144,7 +162,10 @@ class UserModel {
            other.role == role &&
            other.photoUrl == photoUrl &&
            other.phone == phone &&
-           other.isActive == isActive;
+           other.isActive == isActive &&
+           other.isEmailVerified == isEmailVerified &&
+           other.isApproved == isApproved &&
+           other.profileCompleted == profileCompleted;
   }
 
   @override
@@ -155,6 +176,9 @@ class UserModel {
            role.hashCode ^
            photoUrl.hashCode ^
            phone.hashCode ^
-           isActive.hashCode;
+           isActive.hashCode ^
+           isEmailVerified.hashCode ^
+           isApproved.hashCode ^
+           profileCompleted.hashCode;
   }
 }

@@ -3,17 +3,20 @@ import '../core/app_config.dart';
 import '../features/auth/screens/login_screen.dart';
 import '../features/auth/screens/signup_screen.dart';
 import '../features/auth/onboarding_screen.dart';
+import '../features/auth/screens/waiting_approval_screen.dart';
 import '../features/auth/role_selector_screen.dart';
 import '../features/admin/admin_dashboard_screen.dart';
 import '../features/client/client_dashboard_screen.dart';
 import '../features/employee/employee_dashboard_screen.dart';
 import '../features/profile/screens/provider_profile_screen.dart';
 import '../features/chat/screens/chat_screen.dart';
+import '../core/widgets/role_guard.dart';
 
 class AppRouter {
   static const String loginRoute = '/LoginScreen';
   static const String signupRoute = '/SignupScreen';
   static const String onboardingRoute = '/onboarding';
+  static const String waitingApprovalRoute = '/waiting-approval';
   static const String roleSelectorRoute = '/role-selector';
   static const String adminDashboardRoute = '/admin-dashboard';
   static const String clientDashboardRoute = '/client-dashboard';
@@ -38,17 +41,38 @@ class AppRouter {
       case onboardingRoute:
         return _buildRoute(const OnboardingScreen(), settings);
 
+      case waitingApprovalRoute:
+        return _buildRoute(const WaitingApprovalScreen(), settings);
+
       case roleSelectorRoute:
         return _buildRoute(const RoleSelectorScreen(), settings);
 
       case adminDashboardRoute:
-        return _buildRoute(const AdminDashboardScreen(), settings);
+        return _buildRoute(
+          const RoleGuard(
+            allowedRole: 'admin',
+            child: AdminDashboardScreen(),
+          ),
+          settings,
+        );
 
       case clientDashboardRoute:
-        return _buildRoute(const ClientDashboardScreen(), settings);
+        return _buildRoute(
+          const RoleGuard(
+            allowedRole: 'client',
+            child: ClientDashboardScreen(),
+          ),
+          settings,
+        );
 
       case employeeDashboardRoute:
-        return _buildRoute(const EmployeeDashboardScreen(), settings);
+        return _buildRoute(
+          const RoleGuard(
+            allowedRole: 'employee',
+            child: EmployeeDashboardScreen(),
+          ),
+          settings,
+        );
 
       case '/provider-profile':
         final args = settings.arguments as String;
@@ -121,10 +145,15 @@ class AppRouter {
   static String getInitialRoute({
     required bool isSignedIn,
     required bool needsOnboarding,
+    required bool isApproved,
     String? userRole,
   }) {
     if (!isSignedIn) {
       return loginRoute;
+    }
+
+    if (!isApproved) {
+      return waitingApprovalRoute;
     }
 
     if (needsOnboarding) {

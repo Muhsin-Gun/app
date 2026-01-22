@@ -99,6 +99,7 @@ class ProMarketApp extends StatelessWidget {
     return AppRouter.getInitialRoute(
       isSignedIn: authProvider.isSignedIn,
       needsOnboarding: authProvider.needsOnboarding(),
+      isApproved: authProvider.isApproved,
       userRole: authProvider.userRole,
     );
   }

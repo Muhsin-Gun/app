@@ -34,6 +34,7 @@ class EmployeeProfileScreen extends StatelessWidget {
                     width: double.infinity,
                     height: double.infinity,
                     fit: BoxFit.cover,
+                    semanticLabel: 'Profile picture of ${employee.name}',
                   ),
                   Container(
                     decoration: BoxDecoration(

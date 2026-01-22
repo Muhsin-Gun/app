@@ -7,7 +7,7 @@ class CustomImageWidget extends StatelessWidget {
   final double? width;
   final double? height;
   final BoxFit fit;
-  final String semanticLabel;
+  final String? semanticLabel;
   final Widget? placeholder;
   final Widget? errorWidget;
   final BorderRadius? borderRadius;
@@ -19,7 +19,7 @@ class CustomImageWidget extends StatelessWidget {
     this.width,
     this.height,
     this.fit = BoxFit.cover,
-    required this.semanticLabel,
+    this.semanticLabel,
     this.placeholder,
     this.errorWidget,
     this.borderRadius,
@@ -81,10 +81,7 @@ class CustomImageWidget extends StatelessWidget {
       );
     }
 
-    return Semantics(
-      label: semanticLabel,
-      child: imageWidget,
-    );
+    return Semantics(label: semanticLabel, child: imageWidget);
   }
 
   Widget _buildPlaceholder(BuildContext context) {
@@ -126,7 +123,7 @@ class CustomImageWidget extends StatelessWidget {
         child: Icon(
           Icons.broken_image,
           color: Theme.of(context).colorScheme.onErrorContainer,
-          size: (width != null && height != null) 
+          size: (width != null && height != null)
               ? (width! < height! ? width! * 0.4 : height! * 0.4)
               : 24,
         ),
@@ -161,7 +158,8 @@ class CustomAvatarWidget extends StatelessWidget {
     if (imageUrl != null && imageUrl!.isNotEmpty) {
       avatar = CircleAvatar(
         radius: radius,
-        backgroundColor: backgroundColor ?? Theme.of(context).colorScheme.primary,
+        backgroundColor:
+            backgroundColor ?? Theme.of(context).colorScheme.primary,
         child: ClipOval(
           child: CustomImageWidget(
             imageUrl: imageUrl!,
@@ -178,10 +176,7 @@ class CustomAvatarWidget extends StatelessWidget {
     }
 
     if (onTap != null) {
-      avatar = GestureDetector(
-        onTap: onTap,
-        child: avatar,
-      );
+      avatar = GestureDetector(onTap: onTap, child: avatar);
     }
 
     return avatar;
@@ -204,7 +199,7 @@ class CustomAvatarWidget extends StatelessWidget {
 
   String _getInitials(String text) {
     if (text.isEmpty) return '?';
-    
+
     final words = text.trim().split(' ');
     if (words.length >= 2) {
       return '${words[0][0]}${words[1][0]}'.toUpperCase();

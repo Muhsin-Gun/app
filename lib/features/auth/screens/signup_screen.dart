@@ -161,10 +161,7 @@ class _SignupScreenState extends State<SignupScreen> {
             backgroundColor: Colors.green,
           ),
         );
-        AppRouter.navigateToDashboard(
-          context,
-          authProvider.userRole ?? 'client',
-        );
+        AppRouter.navigateToOnboarding(context);
       }
     } catch (e) {
       if (mounted)
