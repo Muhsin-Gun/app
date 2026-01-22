@@ -192,6 +192,56 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  // Sign up with email and password
+  Future<bool> signUpWithEmail({
+    required String email,
+    required String password,
+    required String name,
+    required String role,
+  }) async {
+    try {
+      _setLoading(true);
+      _clearError();
+
+      AppConfig.log('Signing up with email: $email, role: $role');
+
+      // Create user with Firebase Auth
+      final credential = await _authService.signUpWithEmailAndPassword(email, password);
+
+      if (credential != null && credential.user != null) {
+        // Create user profile in Firestore
+        final userModel = UserModel(
+          uid: credential.user!.uid,
+          name: name,
+          email: email,
+          role: role,
+          createdAt: DateTime.now(),
+          metadata: {
+            'onboardingCompleted': true,
+          },
+        );
+
+        await _firestoreService.createUser(userModel);
+        
+        // Update local state
+        _userModel = userModel;
+        _firebaseUser = credential.user;
+        
+        AppConfig.log('User created successfully');
+        return true;
+      }
+      
+      _setError('Failed to create user');
+      return false;
+    } catch (e) {
+      AppConfig.logError('Failed to sign up', e);
+      _setError(_getErrorMessage(e));
+      return false;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
   // Sign in with email and password
   Future<bool> signInWithEmailAndPassword(String email, String password) async {
     try {

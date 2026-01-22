@@ -14,11 +14,16 @@ import '../../widgets/custom_bottom_bar.dart';
 import '../../widgets/custom_image_widget.dart';
 import 'service_browse_screen.dart';
 import 'client_bookings_screen.dart';
+<<<<<<< HEAD
 import 'booking_form_screen.dart';
 import 'service_details_screen.dart';
 import '../../models/product_model.dart';
 import '../../models/message_model.dart';
 import '../../models/user_model.dart';
+=======
+import 'client_messages_screen.dart';
+import 'client_profile_edit_screen.dart';
+>>>>>>> 3fc94d9 (profile)
 
 class ClientDashboardScreen extends StatefulWidget {
   const ClientDashboardScreen({super.key});
@@ -658,6 +663,7 @@ class ClientMessagesPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+<<<<<<< HEAD
     final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
@@ -743,6 +749,9 @@ class ClientMessagesPage extends StatelessWidget {
         },
       ),
     );
+=======
+    return const ClientMessagesScreen();
+>>>>>>> 3fc94d9 (profile)
   }
 
   String _formatTime(DateTime dt) {
@@ -759,6 +768,7 @@ class ClientProfilePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+<<<<<<< HEAD
     final theme = Theme.of(context);
     final authProvider = context.watch<AuthProvider>();
 
@@ -921,6 +931,9 @@ class ClientProfilePage extends StatelessWidget {
         ],
       ),
     );
+=======
+    return const ClientProfileEditScreen();
+>>>>>>> 3fc94d9 (profile)
   }
 }
 

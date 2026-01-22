@@ -190,6 +190,27 @@ class ProductProvider extends ChangeNotifier {
     }
   }
 
+  // Update product status (availability)
+  Future<bool> updateProductStatus(String productId, bool isAvailable) async {
+    try {
+      _setLoading(true);
+      _clearError();
+      
+      AppConfig.log('Updating product status: $productId to ${isAvailable ? "available" : "unavailable"}');
+      
+      await _firestoreService.updateProduct(productId, {'isAvailable': isAvailable});
+      
+      AppConfig.log('Product status updated successfully');
+      return true;
+    } catch (e) {
+      AppConfig.logError('Failed to update product status', e);
+      _setError('Failed to update product status');
+      return false;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
   // Get product by ID
   Future<ProductModel?> getProduct(String productId) async {
     try {

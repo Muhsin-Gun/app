@@ -98,9 +98,31 @@ class AppTheme {
         errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: error)),
         focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: error, width: 2)),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+<<<<<<< HEAD
         hintStyle: GoogleFonts.inter(fontSize: 14, color: textTertiaryColor),
         labelStyle: GoogleFonts.inter(fontSize: 14, color: textSecondaryColor),
+=======
+        hintStyle: GoogleFonts.inter(
+          fontSize: 14,
+          color: textTertiaryColor,
+        ),
+        labelStyle: GoogleFonts.inter(
+          fontSize: 14,
+          color: textSecondaryColor,
+        ),
       ),
+      
+/*
+      cardTheme: CardTheme(
+        color: cardColor,
+        elevation: 2,
+        shadowColor: shadowColor,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+>>>>>>> 3fc94d9 (profile)
+      ),
+*/
       
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         backgroundColor: surfaceLight,

@@ -83,6 +83,22 @@ class BookingProvider extends ChangeNotifier {
     }
   }
 
+  // Assign employee (alias for assignBookingToEmployee)
+  Future<bool> assignEmployee(String bookingId, String employeeId) async {
+    // Get employee name from available employees
+    final employee = _availableEmployees.firstWhere(
+      (e) => e.uid == employeeId,
+      orElse: () => UserModel(
+        uid: employeeId,
+        name: 'Unknown',
+        email: '',
+        role: 'employee',
+        createdAt: DateTime.now(),
+      ),
+    );
+    return await assignBookingToEmployee(bookingId, employeeId, employee.name);
+  }
+
   // Update booking status
   Future<bool> updateStatus(String bookingId, String newStatus) async {
     try {
