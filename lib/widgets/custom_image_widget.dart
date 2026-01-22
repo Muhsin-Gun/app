@@ -19,11 +19,7 @@ class CustomImageWidget extends StatelessWidget {
     this.width,
     this.height,
     this.fit = BoxFit.cover,
-<<<<<<< HEAD
-    this.semanticLabel,
-=======
     this.semanticLabel = 'Image',
->>>>>>> 3fc94d9 (profile)
     this.placeholder,
     this.errorWidget,
     this.borderRadius,

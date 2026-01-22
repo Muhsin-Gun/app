@@ -206,7 +206,7 @@ class AuthProvider extends ChangeNotifier {
       AppConfig.log('Signing up with email: $email, role: $role');
 
       // Create user with Firebase Auth
-      final credential = await _authService.signUpWithEmailAndPassword(email, password);
+      final credential = await _authService.createUserWithEmailAndPassword(email, password, name, role: role);
 
       if (credential != null && credential.user != null) {
         // Create user profile in Firestore

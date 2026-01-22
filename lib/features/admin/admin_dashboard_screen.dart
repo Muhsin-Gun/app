@@ -13,19 +13,14 @@ import '../../providers/message_provider.dart';
 import '../../routing/app_router.dart';
 import '../../widgets/custom_icon_widget.dart';
 import '../../widgets/custom_bottom_bar.dart';
-<<<<<<< HEAD
 import 'screens/manage_services_screen.dart';
-import 'screens/manage_employees_screen.dart';
 import 'screens/admin_bookings_screen.dart';
+import 'screens/manage_employees_screen.dart';
 import 'screens/admin_messages_screen.dart';
 import 'screens/admin_analytics_screen.dart';
+import '../client/client_messages_screen.dart';
 import '../../models/message_model.dart';
 import '../../models/user_model.dart';
-=======
-import 'admin_products_management_screen.dart';
-import 'admin_bookings_management_screen.dart';
-import '../client/client_messages_screen.dart';
->>>>>>> 3fc94d9 (profile)
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -59,12 +54,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       body: PageView(
         controller: _pageController,
         onPageChanged: (index) => setState(() => _currentIndex = index),
-        children: const [
-          AdminDashboardPage(),
+        children: [
+          const AdminDashboardPage(),
           ManageServicesScreen(),
           AdminBookingsScreen(),
-          ManageEmployeesScreen(),
-          AdminMessagesScreen(),
+          const ManageEmployeesScreen(),
+          const AdminMessagesScreen(),
         ],
       ),
       bottomNavigationBar: AdminBottomBar(
@@ -611,89 +606,4 @@ class _ActivityItem extends StatelessWidget {
   }
 }
 
-// Admin management pages - all functional
-class AdminProductsPage extends StatelessWidget {
-  const AdminProductsPage({super.key});
 
-  @override
-  Widget build(BuildContext context) {
-<<<<<<< HEAD
-    return Scaffold(
-      appBar: AppBar(title: const Text('Products')),
-      body: const Center(child: Text('Products Management - Coming Soon')),
-    );
-=======
-    return const AdminProductsManagementScreen();
->>>>>>> 3fc94d9 (profile)
-  }
-}
-
-class AdminBookingsPage extends StatelessWidget {
-  const AdminBookingsPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-<<<<<<< HEAD
-    return Scaffold(
-      appBar: AppBar(title: const Text('Bookings')),
-      body: const Center(child: Text('Bookings Management - Coming Soon')),
-    );
-=======
-    return const AdminBookingsManagementScreen();
->>>>>>> 3fc94d9 (profile)
-  }
-}
-
-class AdminEmployeesPage extends StatelessWidget {
-  const AdminEmployeesPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Scaffold(
-<<<<<<< HEAD
-      appBar: AppBar(title: const Text('Employees')),
-      body: const Center(child: Text('Employee Management - Coming Soon')),
-    );
-  }
-}
-=======
-      appBar: AppBar(
-        title: const Text('Employee Management'),
-        automaticallyImplyLeading: false,
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.people, size: 64, color: theme.colorScheme.primary.withOpacity(0.5)),
-            SizedBox(height: 16),
-            Text(
-              'Employee Management',
-              style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 8),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 32),
-              child: Text(
-                'Manage employee accounts, permissions, and work assignments',
-                style: theme.textTheme.bodyMedium,
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class AdminMessagesPage extends StatelessWidget {
-  const AdminMessagesPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const ClientMessagesScreen();
-  }
-}
->>>>>>> 3fc94d9 (profile)

@@ -14,16 +14,13 @@ import '../../widgets/custom_bottom_bar.dart';
 import '../../widgets/custom_image_widget.dart';
 import 'service_browse_screen.dart';
 import 'client_bookings_screen.dart';
-<<<<<<< HEAD
+import 'client_messages_screen.dart';
+import 'client_profile_edit_screen.dart';
 import 'booking_form_screen.dart';
 import 'service_details_screen.dart';
 import '../../models/product_model.dart';
 import '../../models/message_model.dart';
 import '../../models/user_model.dart';
-=======
-import 'client_messages_screen.dart';
-import 'client_profile_edit_screen.dart';
->>>>>>> 3fc94d9 (profile)
 
 class ClientDashboardScreen extends StatefulWidget {
   const ClientDashboardScreen({super.key});
@@ -438,8 +435,8 @@ class _ServiceCard extends StatelessWidget {
               child: Stack(
                 children: [
                   CustomImageWidget(
-                    imageUrl: product.imageUrls.isNotEmpty
-                        ? product.imageUrls.first
+                    imageUrl: product.imageUrl.isNotEmpty
+                        ? product.imageUrl
                         : '',
                     width: double.infinity,
                     height: double.infinity,
@@ -534,7 +531,7 @@ class _ServiceCard extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        product.formattedPrice,
+                        '\$${product.price.toStringAsFixed(2)}',
                         style: theme.textTheme.titleMedium?.copyWith(
                           color: theme.colorScheme.primary,
                           fontWeight: FontWeight.w900,
@@ -613,7 +610,7 @@ class RecentBookingsSection extends StatelessWidget {
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 subtitle: Text(
-                  booking.statusDisplayName,
+                  booking.status.toUpperCase(),
                   style: TextStyle(
                     color: _getStatusColor(booking.status),
                     fontWeight: FontWeight.bold,
@@ -631,7 +628,7 @@ class RecentBookingsSection extends StatelessWidget {
   }
 
   Color _getStatusColor(String status) {
-    switch (status) {
+    switch (status.toLowerCase()) {
       case 'pending':
         return Colors.orange;
       case 'assigned':
@@ -663,103 +660,7 @@ class ClientMessagesPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-<<<<<<< HEAD
-    final theme = Theme.of(context);
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Connect',
-          style: TextStyle(fontWeight: FontWeight.w900),
-        ),
-        centerTitle: false,
-      ),
-      body: Consumer<MessageProvider>(
-        builder: (context, provider, _) {
-          final conversations = provider.conversations;
-          if (provider.isLoading && conversations.isEmpty)
-            return const Center(child: CircularProgressIndicator());
-          if (conversations.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.chat_bubble_outline_rounded,
-                    size: 64,
-                    color: theme.colorScheme.outlineVariant,
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Your conversations will appear here',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-            );
-          }
-          return ListView.separated(
-            padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 2.h),
-            itemCount: conversations.length,
-            separatorBuilder: (context, index) => const Divider(),
-            itemBuilder: (context, index) {
-              final conv = conversations[index];
-              final MessageModel lastMessage = conv['message'];
-              final UserModel? otherUser = conv['otherUser'];
-              final int unreadCount = conv['unreadCount'] ?? 0;
-              final name = otherUser?.name ?? 'Partner';
-
-              return ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: CustomAvatarWidget(
-                  imageUrl: otherUser?.photoUrl,
-                  fallbackText: name[0],
-                  radius: 28,
-                ),
-                title: Text(
-                  name,
-                  style: const TextStyle(fontWeight: FontWeight.w900),
-                ),
-                subtitle: Text(
-                  lastMessage.text,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                trailing: Text(
-                  _formatTime(lastMessage.createdAt),
-                  style: theme.textTheme.bodySmall,
-                ),
-                onTap: () {
-                  final authProvider = context.read<AuthProvider>();
-                  Navigator.pushNamed(
-                    context,
-                    '/chat',
-                    arguments: {
-                      'otherUserId':
-                          otherUser?.uid ??
-                          (lastMessage.senderId == authProvider.userId
-                              ? lastMessage.receiverId
-                              : lastMessage.senderId),
-                      'otherUserName': name,
-                    },
-                  );
-                },
-              );
-            },
-          );
-        },
-      ),
-    );
-=======
     return const ClientMessagesScreen();
->>>>>>> 3fc94d9 (profile)
-  }
-
-  String _formatTime(DateTime dt) {
-    final now = DateTime.now();
-    if (now.difference(dt).inDays == 0) {
-      return '${dt.hour}:${dt.minute.toString().padLeft(2, '0')}';
-    }
-    return '${dt.day}/${dt.month}';
   }
 }
 
@@ -768,203 +669,6 @@ class ClientProfilePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-<<<<<<< HEAD
-    final theme = Theme.of(context);
-    final authProvider = context.watch<AuthProvider>();
-
-    return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            expandedHeight: 25.h,
-            pinned: true,
-            flexibleSpace: FlexibleSpaceBar(
-              background: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      theme.colorScheme.primary,
-                      theme.colorScheme.secondary,
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                ),
-                child: Center(
-                  child: SingleChildScrollView(
-                    physics: const NeverScrollableScrollPhysics(),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        SizedBox(height: 4.h),
-                        CustomAvatarWidget(
-                          imageUrl: authProvider.userPhotoUrl,
-                          fallbackText: authProvider.userName ?? 'U',
-                          radius: 45,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          authProvider.userName ?? 'User',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w900,
-                            fontSize: 24,
-                          ),
-                        ),
-                        Text(
-                          authProvider.currentUser?.email ?? '',
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.8),
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 3.h),
-              child: Column(
-                children: [
-                  _buildSection(theme, 'Preferences', [
-                    _ProfileItem(
-                      icon: Icons.dark_mode_rounded,
-                      title: 'App Theme',
-                      trailing: Switch.adaptive(
-                        value: theme.brightness == Brightness.dark,
-                        onChanged: (v) => authProvider.toggleTheme(),
-                      ),
-                    ),
-                    _ProfileItem(
-                      icon: Icons.notifications_active_rounded,
-                      title: 'Push Notifications',
-                      onTap: () {},
-                    ),
-                  ]),
-                  SizedBox(height: 3.h),
-                  _buildSection(theme, 'Account Settings', [
-                    _ProfileItem(
-                      icon: Icons.shield_rounded,
-                      title: 'Privacy & Security',
-                      onTap: () {},
-                    ),
-                    _ProfileItem(
-                      icon: Icons.history_rounded,
-                      title: 'Payment History',
-                      onTap: () {},
-                    ),
-                    _ProfileItem(
-                      icon: Icons.logout_rounded,
-                      title: 'Sign Out',
-                      color: Colors.pink,
-                      showArrow: false,
-                      onTap: () => _handleLogout(context),
-                    ),
-                  ]),
-                  SizedBox(height: 5.h),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSection(
-    ThemeData theme,
-    String title,
-    List<_ProfileItem> items,
-  ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 8, bottom: 8),
-          child: Text(
-            title.toUpperCase(),
-            style: theme.textTheme.labelMedium?.copyWith(letterSpacing: 1.2),
-          ),
-        ),
-        Container(
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surface,
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
-            ),
-          ),
-          child: Column(children: items),
-        ),
-      ],
-    );
-  }
-
-  void _handleLogout(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Logout'),
-        content: const Text('Are you sure you want to exit?'),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              await context.read<AuthProvider>().signOut();
-              if (context.mounted) AppRouter.navigateToLogin(context);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Logout'),
-          ),
-        ],
-      ),
-    );
-=======
     return const ClientProfileEditScreen();
->>>>>>> 3fc94d9 (profile)
-  }
-}
-
-class _ProfileItem extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final VoidCallback? onTap;
-  final Widget? trailing;
-  final Color? color;
-  final bool showArrow;
-  const _ProfileItem({
-    required this.icon,
-    required this.title,
-    this.onTap,
-    this.trailing,
-    this.color,
-    this.showArrow = true,
-  });
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return ListTile(
-      onTap: onTap,
-      leading: Icon(icon, color: color ?? theme.colorScheme.primary),
-      title: Text(
-        title,
-        style: TextStyle(fontWeight: FontWeight.bold, color: color),
-      ),
-      trailing:
-          trailing ??
-          (showArrow ? const Icon(Icons.chevron_right_rounded) : null),
-    );
   }
 }

@@ -6,6 +6,7 @@ import '../../providers/product_provider.dart';
 import '../../widgets/custom_image_widget.dart';
 import '../../models/product_model.dart';
 import 'service_details_screen.dart';
+import '../../core/theme.dart';
 
 class ServiceBrowseScreen extends StatefulWidget {
   const ServiceBrowseScreen({super.key});
@@ -16,16 +17,17 @@ class ServiceBrowseScreen extends StatefulWidget {
 
 class _ServiceBrowseScreenState extends State<ServiceBrowseScreen> {
   String _searchQuery = '';
-  String _selectedCategory = 'All';
+  String _selectedCategory = '';
+  String _sortBy = 'name';
   final TextEditingController _searchController = TextEditingController();
 
-  final List<Map<String, dynamic>> _categories = [
-    {'name': 'All', 'icon': Icons.grid_view_rounded},
-    {'name': 'Cleaning', 'icon': Icons.cleaning_services_rounded},
-    {'name': 'Plumbing', 'icon': Icons.plumbing_rounded},
-    {'name': 'Electrical', 'icon': Icons.electrical_services_rounded},
-    {'name': 'Beauty', 'icon': Icons.face_rounded},
-    {'name': 'Moving', 'icon': Icons.local_shipping_rounded},
+  final List<ServiceCategory> _categories = [
+    ServiceCategory(name: 'All', icon: 'grid_view', color: Colors.indigo),
+    ServiceCategory(name: 'Cleaning', icon: 'cleaning_services', color: Colors.blue),
+    ServiceCategory(name: 'Plumbing', icon: 'plumbing', color: Colors.red),
+    ServiceCategory(name: 'Electrical', icon: 'electrical_services', color: Colors.orange),
+    ServiceCategory(name: 'Beauty', icon: 'face', color: Colors.pink),
+    ServiceCategory(name: 'Moving', icon: 'local_shipping', color: Colors.green),
   ];
 
   @override
@@ -34,8 +36,6 @@ class _ServiceBrowseScreenState extends State<ServiceBrowseScreen> {
     super.dispose();
   }
 
-<<<<<<< HEAD
-=======
   void _onSearchChanged(String query) {
     setState(() {
       _searchQuery = query;
@@ -63,7 +63,7 @@ class _ServiceBrowseScreenState extends State<ServiceBrowseScreen> {
       final matchesCategory = _selectedCategory.isEmpty ||
           product.category.toLowerCase() == _selectedCategory.toLowerCase();
       
-      return matchesSearch && matchesCategory && product.isActive;
+      return matchesSearch && matchesCategory;
     }).toList();
 
     // Sort products
@@ -91,115 +91,46 @@ class _ServiceBrowseScreenState extends State<ServiceBrowseScreen> {
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
+      appBar: AppBar(
+        title: const Text('Find Services', style: TextStyle(fontWeight: FontWeight.w900)),
+        centerTitle: false,
+      ),
       body: SafeArea(
         child: Column(
           children: [
-            // Header with Search
-            Container(
-              padding: EdgeInsets.all(4.w),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surface,
-                boxShadow: [
-                  BoxShadow(
-                    color: theme.shadowColor.withOpacity(0.1),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Column(
-                children: [
-                  // Search Bar
-                  Container(
-                    height: 6.h,
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surfaceVariant,
-                      borderRadius: BorderRadius.circular(12),
+            // Search Bar
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 1.h),
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 4.w),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surface,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: theme.shadowColor.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
                     ),
-                    child: TextField(
-                      controller: _searchController,
-                      onChanged: _onSearchChanged,
-                      decoration: InputDecoration(
-                        hintText: 'Search services...',
-                        border: InputBorder.none,
-                        prefixIcon: Padding(
-                          padding: EdgeInsets.all(3.w),
-                          child: CustomIconWidget(
-                            iconName: 'search',
-                            color: theme.colorScheme.onSurfaceVariant,
-                            size: 5.w,
-                          ),
-                        ),
-                        suffixIcon: _searchQuery.isNotEmpty
-                            ? IconButton(
-                                onPressed: () {
-                                  _searchController.clear();
-                                  _onSearchChanged('');
-                                },
-                                icon: CustomIconWidget(
-                                  iconName: 'clear',
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                  size: 5.w,
-                                ),
-                              )
-                            : null,
-                        contentPadding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.5.h),
-                      ),
-                    ),
+                  ],
+                ),
+                child: TextField(
+                  controller: _searchController,
+                  onChanged: _onSearchChanged,
+                  decoration: InputDecoration(
+                    hintText: 'What are you looking for?',
+                    border: InputBorder.none,
+                    icon: Icon(Icons.search_rounded, color: theme.colorScheme.primary),
                   ),
-                  SizedBox(height: 2.h),
-                  // Filter and Sort Row
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Container(
-                          height: 5.h,
-                          padding: EdgeInsets.symmetric(horizontal: 3.w),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.surfaceVariant,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: DropdownButtonHideUnderline(
-                            child: DropdownButton<String>(
-                              value: _sortBy,
-                              onChanged: (value) => _onSortChanged(value!),
-                              items: const [
-                                DropdownMenuItem(value: 'name', child: Text('Name')),
-                                DropdownMenuItem(value: 'price_low', child: Text('Price: Low to High')),
-                                DropdownMenuItem(value: 'price_high', child: Text('Price: High to Low')),
-                                DropdownMenuItem(value: 'rating', child: Text('Rating')),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: 3.w),
-                      Container(
-                        height: 5.h,
-                        width: 5.h,
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.surfaceVariant,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: IconButton(
-                          onPressed: () => _showFilterDialog(context),
-                          icon: CustomIconWidget(
-                            iconName: 'tune',
-                            color: theme.colorScheme.onSurfaceVariant,
-                            size: 5.w,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                ),
               ),
             ),
             
             // Categories
             Container(
-              height: 12.h,
-              padding: EdgeInsets.symmetric(vertical: 2.h),
+              height: 10.h,
+              padding: EdgeInsets.symmetric(vertical: 1.h),
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 padding: EdgeInsets.symmetric(horizontal: 4.w),
@@ -218,35 +149,27 @@ class _ServiceBrowseScreenState extends State<ServiceBrowseScreen> {
                         padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.h),
                         decoration: BoxDecoration(
                           color: isSelected 
-                              ? category.color.withOpacity(0.1)
-                              : theme.colorScheme.surfaceVariant,
+                              ? theme.colorScheme.primary
+                              : theme.colorScheme.surface,
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
                             color: isSelected 
-                                ? category.color
-                                : Colors.transparent,
-                            width: 2,
+                                ? theme.colorScheme.primary
+                                : theme.colorScheme.outlineVariant,
+                            width: 1,
                           ),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            CustomIconWidget(
-                              iconName: category.icon,
-                              color: isSelected 
-                                  ? category.color
-                                  : theme.colorScheme.onSurfaceVariant,
-                              size: 4.w,
-                            ),
-                            SizedBox(width: 2.w),
                             Text(
                               category.name,
                               style: theme.textTheme.bodyMedium?.copyWith(
                                 color: isSelected 
-                                    ? category.color
-                                    : theme.colorScheme.onSurfaceVariant,
+                                    ? Colors.white
+                                    : theme.colorScheme.onSurface,
                                 fontWeight: isSelected 
-                                    ? FontWeight.w600
+                                    ? FontWeight.bold
                                     : FontWeight.normal,
                               ),
                             ),
@@ -270,49 +193,24 @@ class _ServiceBrowseScreenState extends State<ServiceBrowseScreen> {
                   final filteredProducts = _filterAndSortProducts(productProvider.products);
 
                   if (filteredProducts.isEmpty) {
-                    return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          CustomIconWidget(
-                            iconName: 'search_off',
-                            color: theme.colorScheme.onSurfaceVariant,
-                            size: 15.w,
-                          ),
-                          SizedBox(height: 2.h),
-                          Text(
-                            'No services found',
-                            style: theme.textTheme.titleLarge?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                          SizedBox(height: 1.h),
-                          Text(
-                            'Try adjusting your search or filters',
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
+                    return _buildEmptyState(theme);
                   }
 
                   return GridView.builder(
                     padding: EdgeInsets.all(4.w),
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 3.w,
-                      mainAxisSpacing: 3.w,
-                      childAspectRatio: 0.75,
+                      crossAxisCount: MediaQuery.of(context).size.width > 600 ? 3 : 2,
+                      crossAxisSpacing: 4.w,
+                      mainAxisSpacing: 4.w,
+                      childAspectRatio: 0.8,
                     ),
                     itemCount: filteredProducts.length,
                     itemBuilder: (context, index) {
                       final product = filteredProducts[index];
-                      return ServiceCard(
-                        product: product,
-                        onTap: () => _showServiceDetails(context, product),
-                      );
+                      return _ServiceGridCard(product: product)
+                          .animate()
+                          .fadeIn(delay: (index * 50).ms)
+                          .scale(begin: const Offset(0.9, 0.9), end: const Offset(1, 1));
                     },
                   );
                 },
@@ -324,496 +222,15 @@ class _ServiceBrowseScreenState extends State<ServiceBrowseScreen> {
     );
   }
 
-  void _showFilterDialog(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) => FilterBottomSheet(
-        selectedCategory: _selectedCategory,
-        onCategoryChanged: _onCategorySelected,
-        categories: _categories,
-      ),
-    );
-  }
-
-  void _showServiceDetails(BuildContext context, ProductModel product) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ServiceDetailsScreen(product: product),
-      ),
-    );
-  }
-}
-
-class ServiceCard extends StatelessWidget {
-  final ProductModel product;
-  final VoidCallback onTap;
-
-  const ServiceCard({
-    super.key,
-    required this.product,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: theme.shadowColor.withOpacity(0.1),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Image
-            Expanded(
-              flex: 3,
-              child: ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-                child: CustomImageWidget(
-                  imageUrl: product.imageUrl.isNotEmpty ? product.imageUrl : '',
-                  width: double.infinity,
-                  height: double.infinity,
-                  fit: BoxFit.cover,
-                  semanticLabel: product.title,
-                ),
-              ),
-            ),
-            // Content
-            Expanded(
-              flex: 2,
-              child: Padding(
-                padding: EdgeInsets.all(3.w),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      product.title,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    SizedBox(height: 0.5.h),
-                    Text(
-                      product.description,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const Spacer(),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          '\$${product.price.toStringAsFixed(2)}',
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            color: theme.colorScheme.primary,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        if (product.rating != null)
-                          Row(
-                            children: [
-                              CustomIconWidget(
-                                iconName: 'star',
-                                color: AppTheme.warningColor,
-                                size: 3.w,
-                              ),
-                              SizedBox(width: 1.w),
-                              Text(
-                                product.rating!.toStringAsFixed(1),
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class FilterBottomSheet extends StatelessWidget {
-  final String selectedCategory;
-  final Function(String) onCategoryChanged;
-  final List<ServiceCategory> categories;
-
-  const FilterBottomSheet({
-    super.key,
-    required this.selectedCategory,
-    required this.onCategoryChanged,
-    required this.categories,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Container(
-      padding: EdgeInsets.all(4.w),
+  Widget _buildEmptyState(ThemeData theme) {
+    return Center(
       child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(
-            'Filter by Category',
-            style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          SizedBox(height: 3.h),
-          Wrap(
-            spacing: 2.w,
-            runSpacing: 2.w,
-            children: categories.map((category) {
-              final isSelected = (selectedCategory.isEmpty && category.name == 'All') ||
-                  selectedCategory == category.name;
-              
-              return GestureDetector(
-                onTap: () {
-                  onCategoryChanged(category.name);
-                  Navigator.pop(context);
-                },
-                child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.5.h),
-                  decoration: BoxDecoration(
-                    color: isSelected 
-                        ? category.color.withOpacity(0.1)
-                        : theme.colorScheme.surfaceVariant,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: isSelected 
-                          ? category.color
-                          : Colors.transparent,
-                      width: 2,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      CustomIconWidget(
-                        iconName: category.icon,
-                        color: isSelected 
-                            ? category.color
-                            : theme.colorScheme.onSurfaceVariant,
-                        size: 4.w,
-                      ),
-                      SizedBox(width: 2.w),
-                      Text(
-                        category.name,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: isSelected 
-                              ? category.color
-                              : theme.colorScheme.onSurfaceVariant,
-                          fontWeight: isSelected 
-                              ? FontWeight.w600
-                              : FontWeight.normal,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-          SizedBox(height: 4.h),
-        ],
-      ),
-    );
-  }
-}
-
-class ServiceDetailsScreen extends StatelessWidget {
-  final ProductModel product;
-
-  const ServiceDetailsScreen({super.key, required this.product});
-
->>>>>>> 3fc94d9 (profile)
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Services', style: TextStyle(fontWeight: FontWeight.w900)),
-        centerTitle: false,
-        actions: [
-          IconButton(onPressed: () {}, icon: const Icon(Icons.tune_rounded)),
-        ],
-      ),
-<<<<<<< HEAD
-      body: Column(
-        children: [
-          // Search Bar
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 1.h),
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 4.w),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surface,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5)),
-              ),
-              child: TextField(
-                controller: _searchController,
-                onChanged: (v) => setState(() => _searchQuery = v),
-                decoration: InputDecoration(
-                  hintText: 'What are you looking for?',
-                  border: InputBorder.none,
-                  icon: Icon(Icons.search_rounded, color: theme.colorScheme.primary),
-                ),
-              ),
-            ),
-=======
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Image Gallery
-              child: CustomImageWidget(
-                imageUrl: product.imageUrl,
-                width: double.infinity,
-                height: 30.h,
-                fit: BoxFit.cover,
-                semanticLabel: product.title,
-              ),
-            
-            Padding(
-              padding: EdgeInsets.all(4.w),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Title and Price
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          product.title,
-                          style: theme.textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      Text(
-                        '\$${product.price.toStringAsFixed(2)}',
-                        style: theme.textTheme.headlineSmall?.copyWith(
-                          color: theme.colorScheme.primary,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  
-                  SizedBox(height: 2.h),
-                  
-                  // Rating and Category
-                  Row(
-                    children: [
-                      if (product.rating != null) ...[
-                        CustomIconWidget(
-                          iconName: 'star',
-                          color: AppTheme.warningColor,
-                          size: 4.w,
-                        ),
-                        SizedBox(width: 1.w),
-                        Text(
-                          product.rating!.toStringAsFixed(1),
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        SizedBox(width: 4.w),
-                      ],
-                      Container(
-                        padding: EdgeInsets.symmetric(horizontal: 3.w, vertical: 1.w),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.primary.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          product.category,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.primary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  
-                  SizedBox(height: 3.h),
-                  
-                  // Description
-                  Text(
-                    'Description',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  SizedBox(height: 1.h),
-                  Text(
-                    product.description,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      height: 1.5,
-                    ),
-                  ),
-                  
-                  SizedBox(height: 4.h),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-      bottomNavigationBar: Container(
-        padding: EdgeInsets.all(4.w),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
-          boxShadow: [
-            BoxShadow(
-              color: theme.shadowColor.withOpacity(0.1),
-              blurRadius: 8,
-              offset: const Offset(0, -2),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: OutlinedButton(
-                onPressed: () {
-                  // Contact provider
-                },
-                child: const Text('Contact Provider'),
-              ),
-            ),
-            SizedBox(width: 3.w),
-            Expanded(
-              child: ElevatedButton(
-                onPressed: () {
-                  // Book service
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => BookingFormScreen(product: product),
-                    ),
-                  );
-                },
-                child: const Text('Book Now'),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showBookingDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Book Service'),
-        content: Text('Book ${product.title} for \$${product.price.toStringAsFixed(2)}?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
->>>>>>> 3fc94d9 (profile)
-          ),
-
-          // Categories chips
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 2.h),
-            child: Row(
-              children: _categories.map((cat) {
-                final isSelected = _selectedCategory == cat['name'];
-                return Padding(
-                  padding: const EdgeInsets.only(right: 12),
-                  child: FilterChip(
-                    label: Text(cat['name']),
-                    avatar: Icon(cat['icon'], size: 16, color: isSelected ? Colors.white : theme.colorScheme.primary),
-                    selected: isSelected,
-                    onSelected: (v) => setState(() => _selectedCategory = cat['name']),
-                    labelStyle: TextStyle(
-                      color: isSelected ? Colors.white : theme.colorScheme.onSurface,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                    ),
-                    backgroundColor: theme.colorScheme.surface,
-                    selectedColor: theme.colorScheme.primary,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    side: BorderSide(color: isSelected ? theme.colorScheme.primary : theme.colorScheme.outlineVariant),
-                  ),
-                );
-              }).toList(),
-            ),
-          ),
-
-          // Services Grid
-          Expanded(
-            child: Consumer<ProductProvider>(
-              builder: (context, provider, _) {
-                final products = provider.products.where((p) {
-                  final matchesSearch = p.title.toLowerCase().contains(_searchQuery.toLowerCase());
-                  final matchesCategory = _selectedCategory == 'All' || p.category == _selectedCategory;
-                  return matchesSearch && matchesCategory;
-                }).toList();
-
-                if (provider.isLoading && products.isEmpty) return const Center(child: CircularProgressIndicator());
-                if (products.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.search_off_rounded, size: 64, color: theme.colorScheme.outlineVariant),
-                        const SizedBox(height: 16),
-                        const Text('No services found', style: TextStyle(fontWeight: FontWeight.bold)),
-                      ],
-                    ),
-                  );
-                }
-
-                return GridView.builder(
-                  padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 1.h),
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: MediaQuery.of(context).size.width > 600 ? 3 : 2,
-                    crossAxisSpacing: 4.w,
-                    mainAxisSpacing: 4.w,
-                    childAspectRatio: 0.8,
-                  ),
-                  itemCount: products.length,
-                  itemBuilder: (context, index) {
-                    final product = products[index];
-                    return _ServiceGridCard(product: product).animate().fadeIn(delay: (index * 50).ms).scale(begin: const Offset(0.9, 0.9), end: const Offset(1, 1));
-                  },
-                );
-              },
-            ),
-          ),
+          Icon(Icons.search_off_rounded, size: 64, color: theme.colorScheme.outlineVariant),
+          const SizedBox(height: 16),
+          const Text('No services found', style: TextStyle(fontWeight: FontWeight.bold)),
+          const Text('Try adjusting your search or category'),
         ],
       ),
     );
@@ -829,13 +246,23 @@ class _ServiceGridCard extends StatelessWidget {
     final theme = Theme.of(context);
 
     return InkWell(
-      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => ServiceDetailsScreen(product: product))),
+      onTap: () => Navigator.push(
+        context, 
+        MaterialPageRoute(builder: (context) => ServiceDetailsScreen(product: product))
+      ),
       borderRadius: BorderRadius.circular(24),
       child: Container(
         decoration: BoxDecoration(
           color: theme.colorScheme.surface,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5)),
+          boxShadow: [
+            BoxShadow(
+              color: theme.shadowColor.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -844,7 +271,7 @@ class _ServiceGridCard extends StatelessWidget {
               child: ClipRRect(
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
                 child: CustomImageWidget(
-                  imageUrl: product.imageUrls.isNotEmpty ? product.imageUrls.first : '',
+                  imageUrl: product.imageUrl,
                   width: double.infinity,
                   fit: BoxFit.cover,
                   semanticLabel: 'Image for ${product.title}',
@@ -856,18 +283,30 @@ class _ServiceGridCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(product.title, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14), maxLines: 1, overflow: TextOverflow.ellipsis),
-                  SizedBox(height: 4),
+                  Text(
+                    product.title, 
+                    style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14), 
+                    maxLines: 1, 
+                    overflow: TextOverflow.ellipsis
+                  ),
+                  const SizedBox(height: 4),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('\$${product.price}', style: TextStyle(color: theme.colorScheme.primary, fontWeight: FontWeight.bold, fontSize: 13)),
-                      Row(
-                        children: [
-                          Icon(Icons.star_rounded, size: 14, color: Colors.orange),
-                          Text(' 4.8', style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold)),
-                        ],
+                      Text(
+                        '\$${product.price.toStringAsFixed(2)}', 
+                        style: TextStyle(color: theme.colorScheme.primary, fontWeight: FontWeight.bold, fontSize: 13)
                       ),
+                      if (product.rating != null)
+                        Row(
+                          children: [
+                            const Icon(Icons.star_rounded, size: 14, color: Colors.orange),
+                            Text(
+                              ' ${product.rating!.toStringAsFixed(1)}', 
+                              style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold)
+                            ),
+                          ],
+                        ),
                     ],
                   ),
                 ],
@@ -878,4 +317,16 @@ class _ServiceGridCard extends StatelessWidget {
       ),
     );
   }
+}
+
+class ServiceCategory {
+  final String name;
+  final String icon;
+  final Color color;
+
+  ServiceCategory({
+    required this.name,
+    required this.icon,
+    required this.color,
+  });
 }

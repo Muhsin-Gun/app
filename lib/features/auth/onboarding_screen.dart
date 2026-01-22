@@ -275,7 +275,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           borderRadius: BorderRadius.circular(16),
                         ),
                       ),
-<<<<<<< HEAD
                       child: _isLoading
                           ? const SizedBox(
                               width: 24,
@@ -291,30 +290,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16,
                               ),
-=======
-                    );
-                  },
-                ),
-              ),
-
-              SizedBox(height: 4.h),
-
-               // Continue Button
-              SizedBox(
-                height: 48,
-                child: ElevatedButton(
-                  onPressed: _selectedRole != null && !_isLoading
-                      ? _completeOnboarding
-                      : null,
-                  child: _isLoading
-                      ? SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              theme.colorScheme.onPrimary,
->>>>>>> 3fc94d9 (profile)
                             ),
                     ),
                   ).animate().fadeIn(delay: 1.seconds),

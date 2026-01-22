@@ -146,6 +146,7 @@ class _AdminBookingsManagementScreenState extends State<AdminBookingsManagementS
                     final success = await context.read<BookingProvider>().assignEmployee(
                       booking.id,
                       employee.uid,
+                      employee.name,
                     );
                     if (success && mounted) {
                       Navigator.pop(context);

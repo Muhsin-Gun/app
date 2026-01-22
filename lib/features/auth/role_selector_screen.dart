@@ -159,16 +159,6 @@ class _RoleSelectorScreenState extends State<RoleSelectorScreen> {
                 ),
                 SizedBox(height: 2.h),
 
-<<<<<<< HEAD
-              // Coming Soon Message
-              Container(
-                padding: EdgeInsets.all(6.w),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.3),
-=======
                 // Confirm Password Field
                 TextFormField(
                   controller: _confirmPasswordController,
@@ -271,7 +261,6 @@ class _RoleSelectorScreenState extends State<RoleSelectorScreen> {
                             ),
                           )
                         : const Text('Create Account'),
->>>>>>> 3fc94d9 (profile)
                   ),
                 ),
 
@@ -282,36 +271,14 @@ class _RoleSelectorScreenState extends State<RoleSelectorScreen> {
                   onPressed: () => Navigator.pop(context),
                   child: const Text('Already have an account? Sign In'),
                 ),
-<<<<<<< HEAD
-              ),
-
-              const Spacer(),
-
-              // Back to Login Button
-              SizedBox(
-                height: 48, // Fixed height for web compatibility
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(context).pushReplacementNamed('/login');
-                  },
-                  child: const Text('Back to Login'),
-                ),
-              ),
-
-              SizedBox(height: 2.h),
-            ],
-=======
               ],
             ),
->>>>>>> 3fc94d9 (profile)
           ),
         ),
       ),
     );
   }
 }
-<<<<<<< HEAD
-=======
 
 class RoleOption {
   final String role;
@@ -328,4 +295,3 @@ class RoleOption {
     required this.color,
   });
 }
->>>>>>> 3fc94d9 (profile)

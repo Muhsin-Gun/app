@@ -87,8 +87,8 @@ class _EmployeeProfileEditScreenState extends State<EmployeeProfileEditScreen> {
         // Upload to Cloudinary
         final cloudinaryService = CloudinaryService();
         final uploadedUrl = await cloudinaryService.uploadImage(
-          File(pickedFile.path),
-          folder: 'employee_profiles',
+          File(pickedFile.path).readAsBytesSync(),
+          'employee_profile_${DateTime.now().millisecondsSinceEpoch}.jpg',
         );
 
         if (uploadedUrl != null) {
