@@ -1,126 +1,136 @@
-# Flutter App Audit and Fix Plan
+# ProMarket App - Remaining Implementation Tasks
 
-## Current Status
-- ✅ Basic app structure with providers, models, services
-- ✅ Authentication with role support
-- ✅ Basic dashboards for admin, client, employee
-- ✅ Booking system foundation
-- ❌ Many features incomplete or broken
-- ❌ Role-based functionality not working properly
-- ❌ Real-time messaging missing
-- ❌ Employee assignment to bookings broken
-- ❌ Admin management features incomplete
-- ❌ Payment integration missing
-- ❌ Notifications missing
-- ❌ Search and filtering not working
+## 🚨 CRITICAL PRIORITY
 
-## Priority Fixes (High Impact)
+### 1. Fix Import Errors
+- [ ] Fix missing DateFormat import in employee_dashboard_screen.dart
+- [ ] Fix missing app_colors.dart import in custom_bottom_bar.dart
 
-### 0. Critical Compilation Errors (COMPLETED)
-- [x] Fix MpesaService method mismatch (initiateStkPush -> initiateSTKPush)
-- [x] Replace notification_service.dart with stub (missing firebase packages)
-- [x] Replace FontWeight.black with FontWeight.w900
-- [x] Create custom_avatar_widget.dart
-- [x] Add semanticLabel to Icon in employee_profile_screen.dart
-- [x] Fix payment_provider.dart null handling
+### 2. Forgot Password Functionality
+- [ ] Implement forgot password screen with email input
+- [ ] Add password reset email sending functionality
+- [ ] Create reset password screen for new password entry
+- [ ] Integrate with AuthProvider
 
-### 1. Role-Based Routing and Access Control
-- [ ] Fix routing to properly redirect based on roles
-- [ ] Add route guards to prevent unauthorized access
-- [ ] Ensure admin can only access admin screens
-- [ ] Ensure employees can only access employee screens
+### 3. User Registration System
+- [ ] Remove "Coming Soon" message from role_selector_screen.dart
+- [ ] Implement full user registration flow
+- [ ] Add role selection during registration
+- [ ] Connect to Firebase Auth and Firestore
 
-### 2. Employee Assignment and Job Management
-- [ ] Fix booking provider to properly assign employees
-- [ ] Update employee dashboard to show assigned jobs
-- [ ] Add status update functionality for employees
-- [ ] Fix booking status transitions
+## 🟡 HIGH PRIORITY
 
-### 3. Admin Management Features
-- [ ] Complete manage employees screen with approval/rejection
-- [ ] Complete manage services screen with CRUD operations
-- [ ] Add booking management for admin
-- [ ] Add analytics dashboard
+### 4. Employee Job Management
+- [ ] Implement "Start Job" button functionality
+- [ ] Create job completion workflow
+- [ ] Add photo upload for completed work
+- [ ] Implement customer signature collection
+- [ ] Add time tracking for jobs
 
-### 4. Real-Time Messaging
-- [ ] Implement proper chat between clients and employees
-- [ ] Add message providers and services
-- [ ] Fix chat screen with real data
-- [ ] Add typing indicators and read receipts
+### 5. Employee Earnings Screen
+- [ ] Create complete earnings dashboard
+- [ ] Implement payout history tracking
+- [ ] Add earnings calculation from completed bookings
+- [ ] Create payout management system
 
-### 5. Search and Filtering
-- [ ] Fix product search functionality
+### 6. Profile Editing System
+- [ ] Create EditProfileScreen for all user roles
+- [ ] Implement profile photo upload/cropping
+- [ ] Add change password functionality
+- [ ] Connect to AuthProvider updates
+
+### 7. Admin Analytics Real Data
+- [ ] Connect admin analytics to real booking data
+- [ ] Implement revenue calculations
+- [ ] Add employee performance metrics
+- [ ] Create date range filtering
+
+## 🟢 MEDIUM PRIORITY
+
+### 8. Search & Filter Implementation
+- [ ] Implement functional search in client dashboard
+- [ ] Create advanced filter modal for services
 - [ ] Add category filtering
-- [ ] Implement proper search queries
+- [ ] Implement price range filtering
 
-### 6. Payment Integration
-- [ ] Add M-Pesa STK push integration
-- [ ] Create payment provider
-- [ ] Add payment status tracking
+### 9. Notification System
+- [ ] Implement push notifications with Firebase
+- [ ] Create notification center
+- [ ] Add notification preferences
+- [ ] Integrate with booking and message events
 
-### 7. Notifications
-- [ ] Add Firebase Cloud Messaging
-- [ ] Implement push notifications for bookings and messages
-- [ ] Add in-app notifications
+### 10. Chat Enhancements
+- [ ] Implement file/image sharing in chat
+- [ ] Add typing indicators
+- [ ] Implement read receipts
+- [ ] Add voice/video call functionality
 
-### 8. UI/UX Fixes
-- [ ] Fix layout overflows
-- [ ] Add proper loading states
-- [ ] Improve animations and transitions
-- [ ] Add error handling UI
+### 11. Social Features
+- [ ] Implement favorites/likes for services
+- [ ] Add service sharing functionality
+- [ ] Create full review and rating system
+- [ ] Add user feedback collection
 
-## Implementation Steps
+### 12. Admin Management Tools
+- [ ] Implement admin products management page
+- [ ] Create admin bookings management page
+- [ ] Add admin employee management page
+- [ ] Connect all admin placeholder pages
 
-### Step 1: Fix Core Routing and Role Access
-- Update app_router.dart to enforce role-based access
-- Add middleware for route protection
-- Test role-based navigation
+## 🔵 LOW PRIORITY / ENHANCEMENTS
 
-### Step 2: Complete Employee Job Management
-- Fix booking_provider.dart for employee assignments
-- Update employee_dashboard_screen.dart to show real jobs
-- Add job status update functionality
+### 13. Biometric Authentication
+- [ ] Implement proper biometric sign-in
+- [ ] Add biometric setup flow
+- [ ] Store credentials securely
 
-### Step 3: Complete Admin Features
-- Enhance manage_employees_screen.dart with full CRUD
-- Complete manage_services_screen.dart
-- Add admin booking management
+### 14. Payment Integration
+- [ ] Complete M-Pesa integration
+- [ ] Add payment history tracking
+- [ ] Implement refund system
 
-### Step 4: Implement Real-Time Chat
-- Create message_provider.dart with real-time streams
-- Update chat_screen.dart with proper messaging
-- Add conversation management
+### 15. Provider Profile System
+- [ ] Complete provider profile fetching
+- [ ] Add portfolio/gallery sections
+- [ ] Implement availability calendar
 
-### Step 5: Add Search and Filtering
-- Fix product_provider.dart search functionality
-- Add category filtering in browse screen
-- Implement advanced search
+### 16. Technical Improvements
+- [ ] Fix Cloudinary signature generation (server-side)
+- [ ] Improve full-text search capabilities
+- [ ] Add proper error handling throughout
+- [ ] Implement offline data caching
 
-### Step 6: Payment Integration
-- Create mpesa_service.dart
-- Add payment_provider.dart
-- Integrate with booking flow
+## 📱 UI/UX Improvements
 
-### Step 7: Notifications
-- Add FCM configuration
-- Create notification_service.dart
-- Implement push notifications
+### 17. Responsive Design
+- [ ] Apply responsive wrapper consistently
+- [ ] Test all screens on tablets/web
+- [ ] Fix button sizing issues
 
-### Step 8: UI Polish and Error Handling
-- Fix all overflow issues
-- Add proper loading indicators
-- Improve error messages
-- Add offline support
+### 18. Animation Enhancements
+- [ ] Add more animations to admin screens
+- [ ] Implement skeleton loaders
+- [ ] Add micro-interactions
 
-## Testing Checklist
-- [ ] Admin can login and access admin dashboard
-- [ ] Admin can manage employees (approve/reject)
-- [ ] Admin can manage services (add/edit/delete)
-- [ ] Employee can login and see assigned jobs
-- [ ] Employee can update job status
-- [ ] Client can book services
-- [ ] Client can chat with assigned employee
-- [ ] Search and filtering works
-- [ ] Payments process correctly
-- [ ] Notifications are received
-- [ ] No UI overflows or crashes
+### 19. Accessibility
+- [ ] Add proper screen reader support
+- [ ] Improve color contrast
+- [ ] Add keyboard navigation
+
+## 🏗️ Architecture Improvements
+
+### 20. Code Quality
+- [ ] Remove all TODO markers
+- [ ] Fix deprecated API usage
+- [ ] Clean up unused imports
+- [ ] Add comprehensive error handling
+
+### 21. Testing
+- [ ] Add unit tests for providers
+- [ ] Add widget tests for screens
+- [ ] Add integration tests
+
+### 22. Performance
+- [ ] Implement proper state management optimization
+- [ ] Add image optimization and caching
+- [ ] Optimize database queries
