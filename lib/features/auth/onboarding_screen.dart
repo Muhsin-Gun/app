@@ -82,7 +82,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
             ),
           ),
-          
+
           SafeArea(
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: 8.w),
@@ -90,22 +90,26 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   SizedBox(height: 6.h),
-                  
+
                   // App Icon/Illustration
                   Center(
-                    child: Container(
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.primaryContainer.withOpacity(0.3),
-                        shape: BoxShape.circle,
-                      ),
-                      child: CustomIconWidget(
-                        iconName: 'rocket_launch',
-                        size: 48,
-                        color: theme.colorScheme.primary,
-                      ),
-                    ),
-                  ).animate().scale(duration: 600.ms, curve: Curves.backOut).fadeIn(),
+                        child: Container(
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primaryContainer
+                                .withOpacity(0.3),
+                            shape: BoxShape.circle,
+                          ),
+                          child: CustomIconWidget(
+                            iconName: 'rocket_launch',
+                            size: 48,
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
+                      )
+                      .animate()
+                      .scale(duration: 600.ms, curve: Curves.elasticOut)
+                      .fadeIn(),
 
                   SizedBox(height: 4.h),
 
@@ -134,77 +138,116 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   ...List.generate(_roleOptions.length, (index) {
                     final option = _roleOptions[index];
                     final isSelected = _selectedRole == option.role;
-                    
+
                     return Padding(
                       padding: EdgeInsets.only(bottom: 2.5.h),
-                      child: GestureDetector(
-                        onTap: () => setState(() => _selectedRole = option.role),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 300),
-                          padding: EdgeInsets.all(5.w),
-                          decoration: BoxDecoration(
-                            color: isSelected ? theme.colorScheme.primaryContainer : theme.colorScheme.surface,
-                            borderRadius: BorderRadius.circular(24),
-                            border: Border.all(
-                              color: isSelected ? theme.colorScheme.primary : theme.colorScheme.outlineVariant,
-                              width: isSelected ? 2 : 1,
-                            ),
-                            boxShadow: isSelected ? [
-                              BoxShadow(
-                                color: theme.colorScheme.primary.withOpacity(0.15),
-                                blurRadius: 15,
-                                offset: const Offset(0, 8),
-                              )
-                            ] : [],
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 14.w,
-                                height: 14.w,
-                                decoration: BoxDecoration(
-                                  color: (isSelected ? theme.colorScheme.primary : option.color).withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                child: Center(
-                                  child: CustomIconWidget(
-                                    iconName: option.icon,
-                                    color: isSelected ? theme.colorScheme.primary : option.color,
-                                    size: 28,
+                      child:
+                          GestureDetector(
+                                onTap: () =>
+                                    setState(() => _selectedRole = option.role),
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 300),
+                                  padding: EdgeInsets.all(5.w),
+                                  decoration: BoxDecoration(
+                                    color: isSelected
+                                        ? theme.colorScheme.primaryContainer
+                                        : theme.colorScheme.surface,
+                                    borderRadius: BorderRadius.circular(24),
+                                    border: Border.all(
+                                      color: isSelected
+                                          ? theme.colorScheme.primary
+                                          : theme.colorScheme.outlineVariant,
+                                      width: isSelected ? 2 : 1,
+                                    ),
+                                    boxShadow: isSelected
+                                        ? [
+                                            BoxShadow(
+                                              color: theme.colorScheme.primary
+                                                  .withOpacity(0.15),
+                                              blurRadius: 15,
+                                              offset: const Offset(0, 8),
+                                            ),
+                                          ]
+                                        : [],
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        width: 14.w,
+                                        height: 14.w,
+                                        decoration: BoxDecoration(
+                                          color:
+                                              (isSelected
+                                                      ? theme
+                                                            .colorScheme
+                                                            .primary
+                                                      : option.color)
+                                                  .withOpacity(0.1),
+                                          borderRadius: BorderRadius.circular(
+                                            16,
+                                          ),
+                                        ),
+                                        child: Center(
+                                          child: CustomIconWidget(
+                                            iconName: option.icon,
+                                            color: isSelected
+                                                ? theme.colorScheme.primary
+                                                : option.color,
+                                            size: 28,
+                                          ),
+                                        ),
+                                      ),
+                                      SizedBox(width: 4.w),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              option.title,
+                                              style: theme.textTheme.titleMedium
+                                                  ?.copyWith(
+                                                    fontWeight: FontWeight.bold,
+                                                    color: isSelected
+                                                        ? theme
+                                                              .colorScheme
+                                                              .onPrimaryContainer
+                                                        : theme
+                                                              .colorScheme
+                                                              .onSurface,
+                                                  ),
+                                            ),
+                                            SizedBox(height: 0.5.h),
+                                            Text(
+                                              option.description,
+                                              style: theme.textTheme.bodySmall
+                                                  ?.copyWith(
+                                                    color: isSelected
+                                                        ? theme
+                                                              .colorScheme
+                                                              .onPrimaryContainer
+                                                              .withOpacity(0.7)
+                                                        : theme
+                                                              .colorScheme
+                                                              .onSurfaceVariant,
+                                                  ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      if (isSelected)
+                                        Icon(
+                                          Icons.check_circle,
+                                          color: theme.colorScheme.primary,
+                                          size: 24,
+                                        ).animate().scale(duration: 200.ms),
+                                    ],
                                   ),
                                 ),
-                              ),
-                              SizedBox(width: 4.w),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      option.title,
-                                      style: theme.textTheme.titleMedium?.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                        color: isSelected ? theme.colorScheme.onPrimaryContainer : theme.colorScheme.onSurface,
-                                      ),
-                                    ),
-                                    SizedBox(height: 0.5.h),
-                                    Text(
-                                      option.description,
-                                      style: theme.textTheme.bodySmall?.copyWith(
-                                        color: isSelected 
-                                            ? theme.colorScheme.onPrimaryContainer.withOpacity(0.7)
-                                            : theme.colorScheme.onSurfaceVariant,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              if (isSelected)
-                                Icon(Icons.check_circle, color: theme.colorScheme.primary, size: 24)
-                                    .animate().scale(duration: 200.ms),
-                            ],
-                          ),
-                        ),
-                      ).animate().fadeIn(delay: (600 + (index * 100)).ms).slideX(begin: 0.1, end: 0),
+                              )
+                              .animate()
+                              .fadeIn(delay: (600 + (index * 100)).ms)
+                              .slideX(begin: 0.1, end: 0),
                     );
                   }),
 
@@ -214,19 +257,36 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   SizedBox(
                     height: 56,
                     child: ElevatedButton(
-                      onPressed: _selectedRole != null && !_isLoading ? _completeOnboarding : null,
+                      onPressed: _selectedRole != null && !_isLoading
+                          ? _completeOnboarding
+                          : null,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: theme.colorScheme.primary,
                         foregroundColor: theme.colorScheme.onPrimary,
                         elevation: 0,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
                       ),
                       child: _isLoading
-                          ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                          : const Text('Get Started', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                          ? const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : const Text(
+                              'Get Started',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
                     ),
                   ).animate().fadeIn(delay: 1.seconds),
-                  
+
                   SizedBox(height: 4.h),
                 ],
               ),

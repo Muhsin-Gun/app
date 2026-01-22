@@ -20,10 +20,13 @@ class AppRouter {
   static const String employeeDashboardRoute = '/employee-dashboard';
   static const String chatRoute = '/chat';
 
-  // Generate route based on settings
+  // Generate route based on settings with role checking
   static Route<dynamic>? generateRoute(RouteSettings settings) {
     AppConfig.log('Navigating to: ${settings.name}');
-    
+
+    // Get current user role from AuthProvider (this requires context, so we'll handle it differently)
+    // For now, we'll allow navigation and let the screens handle role checking
+
     switch (settings.name) {
       case '/':
       case loginRoute:
@@ -31,19 +34,19 @@ class AppRouter {
 
       case signupRoute:
         return _buildRoute(const SignupScreen(), settings);
-        
+
       case onboardingRoute:
         return _buildRoute(const OnboardingScreen(), settings);
-        
+
       case roleSelectorRoute:
         return _buildRoute(const RoleSelectorScreen(), settings);
-        
+
       case adminDashboardRoute:
         return _buildRoute(const AdminDashboardScreen(), settings);
-        
+
       case clientDashboardRoute:
         return _buildRoute(const ClientDashboardScreen(), settings);
-        
+
       case employeeDashboardRoute:
         return _buildRoute(const EmployeeDashboardScreen(), settings);
 
@@ -60,7 +63,7 @@ class AppRouter {
           ),
           settings,
         );
-        
+
       default:
         AppConfig.logError('Unknown route: ${settings.name}');
         return _buildRoute(_buildUnknownRoute(), settings);
@@ -78,14 +81,12 @@ class AppRouter {
         const end = Offset.zero;
         const curve = Curves.easeInOut;
 
-        var tween = Tween(begin: begin, end: end).chain(
-          CurveTween(curve: curve),
-        );
+        var tween = Tween(
+          begin: begin,
+          end: end,
+        ).chain(CurveTween(curve: curve));
 
-        return SlideTransition(
-          position: animation.drive(tween),
-          child: child,
-        );
+        return SlideTransition(position: animation.drive(tween), child: child);
       },
       transitionDuration: const Duration(milliseconds: 300),
     );
@@ -94,33 +95,21 @@ class AppRouter {
   // Build unknown route page
   static Widget _buildUnknownRoute() {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Page Not Found'),
-      ),
+      appBar: AppBar(title: const Text('Page Not Found')),
       body: const Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.error_outline,
-              size: 64,
-              color: Colors.red,
-            ),
+            Icon(Icons.error_outline, size: 64, color: Colors.red),
             SizedBox(height: 16),
             Text(
               'Page Not Found',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 8),
             Text(
               'The requested page could not be found.',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey,
-              ),
+              style: TextStyle(fontSize: 16, color: Colors.grey),
             ),
           ],
         ),
@@ -137,11 +126,11 @@ class AppRouter {
     if (!isSignedIn) {
       return loginRoute;
     }
-    
+
     if (needsOnboarding) {
       return onboardingRoute;
     }
-    
+
     switch (userRole) {
       case 'admin':
         return adminDashboardRoute;
@@ -157,7 +146,7 @@ class AppRouter {
   // Navigate to dashboard based on user role
   static void navigateToDashboard(BuildContext context, String userRole) {
     String route;
-    
+
     switch (userRole) {
       case 'admin':
         route = adminDashboardRoute;
@@ -171,37 +160,30 @@ class AppRouter {
       default:
         route = loginRoute;
     }
-    
-    Navigator.of(context).pushNamedAndRemoveUntil(
-      route,
-      (Route<dynamic> route) => false,
-    );
+
+    Navigator.of(
+      context,
+    ).pushNamedAndRemoveUntil(route, (Route<dynamic> route) => false);
   }
 
   // Navigate to login and clear stack
   static void navigateToLogin(BuildContext context) {
-    Navigator.of(context).pushNamedAndRemoveUntil(
-      loginRoute,
-      (Route<dynamic> route) => false,
-    );
+    Navigator.of(
+      context,
+    ).pushNamedAndRemoveUntil(loginRoute, (Route<dynamic> route) => false);
   }
 
   // Navigate to onboarding
   static void navigateToOnboarding(BuildContext context) {
-    Navigator.of(context).pushNamedAndRemoveUntil(
-      onboardingRoute,
-      (Route<dynamic> route) => false,
-    );
+    Navigator.of(
+      context,
+    ).pushNamedAndRemoveUntil(onboardingRoute, (Route<dynamic> route) => false);
   }
 
   // Check if route requires authentication
   static bool requiresAuthentication(String? routeName) {
-    const publicRoutes = [
-      loginRoute,
-      onboardingRoute,
-      roleSelectorRoute,
-    ];
-    
+    const publicRoutes = [loginRoute, onboardingRoute, roleSelectorRoute];
+
     return !publicRoutes.contains(routeName);
   }
 
@@ -212,7 +194,7 @@ class AppRouter {
       clientDashboardRoute,
       employeeDashboardRoute,
     ];
-    
+
     return dashboardRoutes.contains(routeName);
   }
 
@@ -233,12 +215,12 @@ class AppRouter {
   // Check if user can access route
   static bool canAccessRoute(String? routeName, String? userRole) {
     if (routeName == null) return false;
-    
+
     // Public routes can be accessed by anyone
     if (!requiresAuthentication(routeName)) {
       return true;
     }
-    
+
     // Dashboard routes require specific roles
     switch (routeName) {
       case adminDashboardRoute:
@@ -261,14 +243,18 @@ class AppRouter {
     if (canAccessRoute(routeName, userRole)) {
       Navigator.of(context).pushNamed(routeName);
     } else {
-      AppConfig.logError('Access denied to route: $routeName for role: $userRole');
-      
+      AppConfig.logError(
+        'Access denied to route: $routeName for role: $userRole',
+      );
+
       // Show error dialog
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
           title: const Text('Access Denied'),
-          content: const Text('You do not have permission to access this page.'),
+          content: const Text(
+            'You do not have permission to access this page.',
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
@@ -287,10 +273,9 @@ class AppRouter {
 
   // Push route and clear stack
   static void pushAndClearStack(BuildContext context, String routeName) {
-    Navigator.of(context).pushNamedAndRemoveUntil(
-      routeName,
-      (Route<dynamic> route) => false,
-    );
+    Navigator.of(
+      context,
+    ).pushNamedAndRemoveUntil(routeName, (Route<dynamic> route) => false);
   }
 
   // Go back or navigate to fallback route
@@ -313,10 +298,7 @@ class AppRouter {
       settings: settings,
       pageBuilder: (context, animation, secondaryAnimation) => page,
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
-        return FadeTransition(
-          opacity: animation,
-          child: child,
-        );
+        return FadeTransition(opacity: animation, child: child);
       },
       transitionDuration: duration,
     );
@@ -332,14 +314,12 @@ class AppRouter {
         const end = Offset.zero;
         const curve = Curves.easeInOut;
 
-        var tween = Tween(begin: begin, end: end).chain(
-          CurveTween(curve: curve),
-        );
+        var tween = Tween(
+          begin: begin,
+          end: end,
+        ).chain(CurveTween(curve: curve));
 
-        return SlideTransition(
-          position: animation.drive(tween),
-          child: child,
-        );
+        return SlideTransition(position: animation.drive(tween), child: child);
       },
       transitionDuration: const Duration(milliseconds: 400),
     );

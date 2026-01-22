@@ -6,7 +6,7 @@ import '../core/constants.dart';
 
 class BookingProvider extends ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  
+
   List<BookingModel> _bookings = [];
   bool _isLoading = false;
   String? _errorMessage;
@@ -44,19 +44,24 @@ class BookingProvider extends ChangeNotifier {
       }
       // Admin sees all
 
-      _bookingsSubscription = query.orderBy('createdAt', descending: true).snapshots().listen((snapshot) {
-        _bookings = snapshot.docs
-            .map((doc) => BookingModel.fromDocument(doc))
-            .toList();
-        _isLoading = false;
-        _errorMessage = null;
-        notifyListeners();
-      }, onError: (e) {
-        _errorMessage = 'Stream error: $e';
-        _isLoading = false;
-        notifyListeners();
-      });
-      
+      _bookingsSubscription = query
+          .orderBy('createdAt', descending: true)
+          .snapshots()
+          .listen(
+            (snapshot) {
+              _bookings = snapshot.docs
+                  .map((doc) => BookingModel.fromDocument(doc))
+                  .toList();
+              _isLoading = false;
+              _errorMessage = null;
+              notifyListeners();
+            },
+            onError: (e) {
+              _errorMessage = 'Stream error: $e';
+              _isLoading = false;
+              notifyListeners();
+            },
+          );
     } catch (e) {
       _errorMessage = 'Failed to load bookings: $e';
       _isLoading = false;
@@ -94,17 +99,21 @@ class BookingProvider extends ChangeNotifier {
   }
 
   // Assign an employee to a booking
-  Future<bool> assignEmployee(String bookingId, String employeeId, String employeeName) async {
+  Future<bool> assignEmployee(
+    String bookingId,
+    String employeeId,
+    String employeeName,
+  ) async {
     try {
       await _firestore
           .collection(AppConstants.bookingsCollection)
           .doc(bookingId)
           .update({
-        'providerId': employeeId,
-        'providerName': employeeName,
-        'status': 'assigned',
-        'assignedAt': FieldValue.serverTimestamp(),
-      });
+            'employeeId': employeeId,
+            'employeeName': employeeName,
+            'status': 'assigned',
+            'assignedAt': FieldValue.serverTimestamp(),
+          });
       return true;
     } catch (e) {
       _errorMessage = 'Failed to assign employee: $e';

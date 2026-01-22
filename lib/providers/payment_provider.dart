@@ -26,20 +26,22 @@ class PaymentProvider extends ChangeNotifier {
 
       AppConfig.log('Initiating M-Pesa payment: $amount for $reference');
 
-      final result = await _mpesaService.initiateStkPush(
+      final result = await MpesaService.initiateSTKPush(
         phoneNumber: phoneNumber,
-        amount: amount,
-        reference: reference,
-        description: 'Payment for service $reference',
+        amount: amount.toInt(),
+        accountReference: reference,
+        transactionDesc: 'Payment for service $reference',
       );
 
-      if (result['success']) {
-        _successMessage = result['message'];
-        _checkoutRequestId = result['checkoutRequestId'];
-        AppConfig.log('M-Pesa payment initiated successfully: $_checkoutRequestId');
+      if (result != null && result['ResponseCode'] == '0') {
+        _successMessage = 'Payment initiated successfully';
+        _checkoutRequestId = result['CheckoutRequestID'];
+        AppConfig.log(
+          'M-Pesa payment initiated successfully: $_checkoutRequestId',
+        );
         return true;
       } else {
-        _errorMessage = result['message'];
+        _errorMessage = result?['ResponseDescription'] ?? 'Payment failed';
         return false;
       }
     } catch (e) {

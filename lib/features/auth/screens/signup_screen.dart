@@ -79,14 +79,21 @@ class _SignupScreenState extends State<SignupScreen> {
     }
   }
 
-  Future<String?> _uploadImageToCloudinary(Uint8List imageBytes, String fileName) async {
+  Future<String?> _uploadImageToCloudinary(
+    Uint8List imageBytes,
+    String fileName,
+  ) async {
     final cloudName = AppConstants.cloudinaryCloudName;
     final uploadPreset = AppConstants.cloudinaryUploadPreset;
-    final url = Uri.parse('https://api.cloudinary.com/v1_1/$cloudName/image/upload');
+    final url = Uri.parse(
+      'https://api.cloudinary.com/v1_1/$cloudName/image/upload',
+    );
 
     final request = http.MultipartRequest('POST', url);
     request.fields['upload_preset'] = uploadPreset;
-    request.files.add(http.MultipartFile.fromBytes('file', imageBytes, filename: fileName));
+    request.files.add(
+      http.MultipartFile.fromBytes('file', imageBytes, filename: fileName),
+    );
 
     try {
       final response = await request.send();
@@ -104,7 +111,12 @@ class _SignupScreenState extends State<SignupScreen> {
   Future<void> _register() async {
     if (!_formKey.currentState!.validate()) return;
     if (_pickedImageBytes == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select a profile photo'), backgroundColor: Colors.orange));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select a profile photo'),
+          backgroundColor: Colors.orange,
+        ),
+      );
       return;
     }
 
@@ -112,7 +124,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
     try {
       final authProvider = context.read<AuthProvider>();
-      
+
       final success = await authProvider.createUserWithEmailAndPassword(
         _emailController.text.trim(),
         _passwordController.text.trim(),
@@ -120,22 +132,45 @@ class _SignupScreenState extends State<SignupScreen> {
       );
 
       if (!success) {
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(authProvider.errorMessage ?? 'Registration failed'), backgroundColor: Colors.red));
+        if (mounted)
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(authProvider.errorMessage ?? 'Registration failed'),
+              backgroundColor: Colors.red,
+            ),
+          );
         return;
       }
 
-      final imageUrl = await _uploadImageToCloudinary(_pickedImageBytes!, _pickedImageName ?? 'profile.jpg');
-      
+      final imageUrl = await _uploadImageToCloudinary(
+        _pickedImageBytes!,
+        _pickedImageName ?? 'profile.jpg',
+      );
+
       if (imageUrl != null) {
-        await authProvider.updateUserProfile(phone: _phoneController.text.trim(), photoUrl: imageUrl);
+        await authProvider.updateUserProfile(
+          phone: _phoneController.text.trim(),
+          photoUrl: imageUrl,
+        );
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Account created successfully!'), backgroundColor: Colors.green));
-        AppRouter.navigateToDashboard(context, authProvider.userRole ?? 'client');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Account created successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        AppRouter.navigateToDashboard(
+          context,
+          authProvider.userRole ?? 'client',
+        );
       }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red));
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
     } finally {
       if (mounted) setState(() => isLoading = false);
     }
@@ -144,7 +179,7 @@ class _SignupScreenState extends State<SignupScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Scaffold(
       body: Stack(
         children: [
@@ -169,14 +204,19 @@ class _SignupScreenState extends State<SignupScreen> {
                   const SizedBox(height: 40),
                   Text(
                     'Create Account',
-                    style: theme.textTheme.headlineLarge?.copyWith(fontWeight: FontWeight.w900, letterSpacing: -1),
+                    style: theme.textTheme.headlineLarge?.copyWith(
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -1,
+                    ),
                     textAlign: TextAlign.center,
                   ).animate().fadeIn().slideY(begin: -0.2, end: 0),
-                  
+
                   const SizedBox(height: 8),
                   Text(
                     'Join ProMarket today and experience premium services.',
-                    style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                     textAlign: TextAlign.center,
                   ).animate().fadeIn(delay: 200.ms),
 
@@ -194,28 +234,48 @@ class _SignupScreenState extends State<SignupScreen> {
                             decoration: BoxDecoration(
                               color: theme.colorScheme.surfaceContainerLow,
                               shape: BoxShape.circle,
-                              border: Border.all(color: theme.colorScheme.primary.withOpacity(0.2), width: 4),
-                              image: _pickedImageBytes != null 
-                                ? DecorationImage(image: MemoryImage(_pickedImageBytes!), fit: BoxFit.cover)
-                                : null,
+                              border: Border.all(
+                                color: theme.colorScheme.primary.withOpacity(
+                                  0.2,
+                                ),
+                                width: 4,
+                              ),
+                              image: _pickedImageBytes != null
+                                  ? DecorationImage(
+                                      image: MemoryImage(_pickedImageBytes!),
+                                      fit: BoxFit.cover,
+                                    )
+                                  : null,
                             ),
-                            child: _pickedImageBytes == null 
-                              ? Icon(IconlyLight.profile, size: 40, color: theme.colorScheme.primary.withOpacity(0.5))
-                              : null,
+                            child: _pickedImageBytes == null
+                                ? Icon(
+                                    IconlyLight.profile,
+                                    size: 40,
+                                    color: theme.colorScheme.primary
+                                        .withOpacity(0.5),
+                                  )
+                                : null,
                           ),
                           Positioned(
                             right: 0,
                             bottom: 0,
                             child: Container(
                               padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(color: theme.colorScheme.primary, shape: BoxShape.circle),
-                              child: const Icon(Icons.add_a_photo, color: Colors.white, size: 16),
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.primary,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.add_a_photo,
+                                color: Colors.white,
+                                size: 16,
+                              ),
                             ),
                           ),
                         ],
                       ),
                     ),
-                  ).animate().scale(delay: 400.ms, curve: Curves.backOut),
+                  ).animate().scale(delay: 400.ms, curve: Curves.elasticOut),
 
                   const SizedBox(height: 40),
 
@@ -228,7 +288,8 @@ class _SignupScreenState extends State<SignupScreen> {
                           focusNode: _nameFocusNode,
                           hint: 'Full Name',
                           icon: IconlyLight.profile,
-                          validator: (v) => v!.isEmpty ? 'Name is required' : null,
+                          validator: (v) =>
+                              v!.isEmpty ? 'Name is required' : null,
                         ),
                         const SizedBox(height: 16),
                         _buildStyledField(
@@ -237,7 +298,9 @@ class _SignupScreenState extends State<SignupScreen> {
                           hint: 'Email Address',
                           icon: IconlyLight.message,
                           keyboardType: TextInputType.emailAddress,
-                          validator: (v) => v!.isEmpty || !v.contains('@') ? 'Enter a valid email' : null,
+                          validator: (v) => v!.isEmpty || !v.contains('@')
+                              ? 'Enter a valid email'
+                              : null,
                         ),
                         const SizedBox(height: 16),
                         _buildStyledField(
@@ -245,7 +308,8 @@ class _SignupScreenState extends State<SignupScreen> {
                           hint: 'Phone Number',
                           icon: IconlyLight.call,
                           keyboardType: TextInputType.phone,
-                          validator: (v) => v!.isEmpty ? 'Phone number is required' : null,
+                          validator: (v) =>
+                              v!.isEmpty ? 'Phone number is required' : null,
                         ),
                         const SizedBox(height: 16),
                         _buildStyledField(
@@ -254,10 +318,15 @@ class _SignupScreenState extends State<SignupScreen> {
                           hint: 'Password',
                           icon: IconlyLight.lock,
                           obscureText: obscureText,
-                          validator: (v) => v!.length < 6 ? 'Minimum 6 characters' : null,
+                          validator: (v) =>
+                              v!.length < 6 ? 'Minimum 6 characters' : null,
                           suffix: IconButton(
-                            icon: Icon(obscureText ? IconlyLight.hide : IconlyLight.show, size: 20),
-                            onPressed: () => setState(() => obscureText = !obscureText),
+                            icon: Icon(
+                              obscureText ? IconlyLight.hide : IconlyLight.show,
+                              size: 20,
+                            ),
+                            onPressed: () =>
+                                setState(() => obscureText = !obscureText),
                           ),
                         ),
                         const SizedBox(height: 16),
@@ -267,7 +336,9 @@ class _SignupScreenState extends State<SignupScreen> {
                           hint: 'Confirm Password',
                           icon: IconlyLight.lock,
                           obscureText: true,
-                          validator: (v) => v != _passwordController.text ? 'Passwords do not match' : null,
+                          validator: (v) => v != _passwordController.text
+                              ? 'Passwords do not match'
+                              : null,
                         ),
                       ],
                     ),
@@ -283,11 +354,26 @@ class _SignupScreenState extends State<SignupScreen> {
                         backgroundColor: theme.colorScheme.primary,
                         foregroundColor: theme.colorScheme.onPrimary,
                         elevation: 0,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
                       ),
                       child: isLoading
-                        ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                        : const Text('Create Account', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                          ? const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : const Text(
+                              'Create Account',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
                     ),
                   ).animate().fadeIn(delay: 800.ms),
 
@@ -296,14 +382,30 @@ class _SignupScreenState extends State<SignupScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text('Already have an account?', style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
+                      Text(
+                        'Already have an account?',
+                        style: TextStyle(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
                       TextButton(
-                        onPressed: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginScreen())),
-                        child: Text('Login', style: TextStyle(color: theme.colorScheme.primary, fontWeight: FontWeight.bold)),
+                        onPressed: () => Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const LoginScreen(),
+                          ),
+                        ),
+                        child: Text(
+                          'Login',
+                          style: TextStyle(
+                            color: theme.colorScheme.primary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ],
                   ),
-                  
+
                   const SizedBox(height: 40),
                 ],
               ),
@@ -337,10 +439,22 @@ class _SignupScreenState extends State<SignupScreen> {
         suffixIcon: suffix,
         filled: true,
         fillColor: theme.colorScheme.surfaceContainerLow,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: theme.colorScheme.primary, width: 2)),
-        errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: theme.colorScheme.error, width: 1)),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: theme.colorScheme.primary, width: 2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: theme.colorScheme.error, width: 1),
+        ),
       ),
     );
   }

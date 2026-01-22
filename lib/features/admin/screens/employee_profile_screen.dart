@@ -67,14 +67,19 @@ class EmployeeProfileScreen extends StatelessWidget {
                               width: 8,
                               height: 8,
                               decoration: BoxDecoration(
-                                color: employee.isActive ? Colors.green : Colors.red,
+                                color: employee.isActive
+                                    ? Colors.green
+                                    : Colors.red,
                                 shape: BoxShape.circle,
                               ),
                             ),
                             const SizedBox(width: 8),
                             Text(
                               employee.isActive ? 'Active' : 'Offline',
-                              style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.bold),
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ],
                         ),
@@ -93,18 +98,33 @@ class EmployeeProfileScreen extends StatelessWidget {
                 children: [
                   _buildStatsRow(context),
                   SizedBox(height: 4.h),
-                  _buildSectionHeader(context, 'About Professional', Icons.person_outline_rounded),
+                  _buildSectionHeader(
+                    context,
+                    'About Professional',
+                    Icons.person_outline_rounded,
+                  ),
                   SizedBox(height: 2.h),
                   Text(
                     'Reliable and experienced professional with a track record of high-quality service delivery. Specializing in ${employee.role} duties with a focus on client satisfaction and efficiency.',
-                    style: theme.textTheme.bodyMedium?.copyWith(height: 1.6, color: theme.colorScheme.onSurfaceVariant),
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      height: 1.6,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                   ),
                   SizedBox(height: 4.h),
-                  _buildSectionHeader(context, 'Performance History', Icons.analytics_outlined),
+                  _buildSectionHeader(
+                    context,
+                    'Performance History',
+                    Icons.analytics_outlined,
+                  ),
                   SizedBox(height: 2.h),
                   _buildPerformanceCard(context),
                   SizedBox(height: 4.h),
-                  _buildSectionHeader(context, 'Recent Reviews', Icons.star_outline_rounded),
+                  _buildSectionHeader(
+                    context,
+                    'Recent Reviews',
+                    Icons.star_outline_rounded,
+                  ),
                   SizedBox(height: 2.h),
                   _buildReviewList(context),
                   SizedBox(height: 10.h),
@@ -118,7 +138,12 @@ class EmployeeProfileScreen extends StatelessWidget {
         padding: EdgeInsets.fromLTRB(20, 10, 20, 30),
         decoration: BoxDecoration(
           color: theme.colorScheme.surface,
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10)],
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 10,
+            ),
+          ],
         ),
         child: Row(
           children: [
@@ -129,7 +154,9 @@ class EmployeeProfileScreen extends StatelessWidget {
                 label: const Text('Contact'),
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                 ),
               ),
             ),
@@ -137,12 +164,23 @@ class EmployeeProfileScreen extends StatelessWidget {
             Expanded(
               child: FilledButton.icon(
                 onPressed: () {},
-                icon: Icon(employee.isActive ? Icons.block_rounded : Icons.check_circle_rounded),
+                icon: Icon(
+                  employee.isActive
+                      ? Icons.block_rounded
+                      : Icons.check_circle_rounded,
+                  semanticLabel: employee.isActive
+                      ? 'Deactivate employee'
+                      : 'Activate employee',
+                ),
                 label: Text(employee.isActive ? 'Deactivate' : 'Activate'),
                 style: FilledButton.styleFrom(
-                  backgroundColor: employee.isActive ? Colors.red : Colors.green,
+                  backgroundColor: employee.isActive
+                      ? Colors.red
+                      : Colors.green,
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                 ),
               ),
             ),
@@ -152,10 +190,19 @@ class EmployeeProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSectionHeader(BuildContext context, String title, IconData icon) {
+  Widget _buildSectionHeader(
+    BuildContext context,
+    String title,
+    IconData icon,
+  ) {
     return Row(
       children: [
-        Icon(icon, size: 20, color: Theme.of(context).colorScheme.primary),
+        Icon(
+          icon,
+          size: 20,
+          color: Theme.of(context).colorScheme.primary,
+          semanticLabel: title,
+        ),
         const SizedBox(width: 8),
         Text(
           title,
@@ -169,14 +216,29 @@ class EmployeeProfileScreen extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        _buildStatItem(context, 'Jobs Done', statistics['totalBookings']?.toString() ?? '0', Colors.blue),
-        _buildStatItem(context, 'Success', '${statistics['completionRate'] ?? 0}%', Colors.green),
+        _buildStatItem(
+          context,
+          'Jobs Done',
+          statistics['totalBookings']?.toString() ?? '0',
+          Colors.blue,
+        ),
+        _buildStatItem(
+          context,
+          'Success',
+          '${statistics['completionRate'] ?? 0}%',
+          Colors.green,
+        ),
         _buildStatItem(context, 'Rating', '4.9', Colors.orange),
       ],
     );
   }
 
-  Widget _buildStatItem(BuildContext context, String label, String value, Color color) {
+  Widget _buildStatItem(
+    BuildContext context,
+    String label,
+    String value,
+    Color color,
+  ) {
     return Container(
       width: 28.w,
       padding: const EdgeInsets.symmetric(vertical: 16),
@@ -187,9 +249,23 @@ class EmployeeProfileScreen extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Text(value, style: TextStyle(fontWeight: FontWeight.w900, fontSize: 22, color: color)),
+          Text(
+            value,
+            style: TextStyle(
+              fontWeight: FontWeight.w900,
+              fontSize: 22,
+              color: color,
+            ),
+          ),
           const SizedBox(height: 4),
-          Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey,
+            ),
+          ),
         ],
       ),
     ).animate().fadeIn().scale();
@@ -202,7 +278,9 @@ class EmployeeProfileScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5)),
+        border: Border.all(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+        ),
       ),
       child: Column(
         children: [
@@ -223,8 +301,14 @@ class EmployeeProfileScreen extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(label, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-            Text('${(value * 100).toInt()}%', style: TextStyle(color: color, fontWeight: FontWeight.black)),
+            Text(
+              label,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+            ),
+            Text(
+              '${(value * 100).toInt()}%',
+              style: TextStyle(color: color, fontWeight: FontWeight.w900),
+            ),
           ],
         ),
         const SizedBox(height: 8),
@@ -261,14 +345,27 @@ class EmployeeProfileScreen extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('John Doe', style: TextStyle(fontWeight: FontWeight.bold)),
+                  const Text(
+                    'John Doe',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                   Row(
-                    children: List.generate(5, (i) => Icon(Icons.star_rounded, size: 14, color: i < 4 ? Colors.orange : Colors.grey[300])),
+                    children: List.generate(
+                      5,
+                      (i) => Icon(
+                        Icons.star_rounded,
+                        size: 14,
+                        color: i < 4 ? Colors.orange : Colors.grey[300],
+                      ),
+                    ),
                   ),
                 ],
               ),
               const SizedBox(height: 8),
-              const Text('Exceptional service! Very professional and efficient.', style: TextStyle(fontSize: 13, color: Colors.black87)),
+              const Text(
+                'Exceptional service! Very professional and efficient.',
+                style: TextStyle(fontSize: 13, color: Colors.black87),
+              ),
             ],
           ),
         );

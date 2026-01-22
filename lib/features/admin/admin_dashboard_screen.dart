@@ -11,7 +11,7 @@ import '../../providers/booking_provider.dart';
 import '../../providers/employee_provider.dart';
 import '../../providers/message_provider.dart';
 import '../../routing/app_router.dart';
-import '../../widgets/custom_icon_widget.
+import '../../widgets/custom_icon_widget.dart';
 import '../../widgets/custom_bottom_bar.dart';
 import 'screens/manage_services_screen.dart';
 import 'screens/manage_employees_screen.dart';
@@ -79,11 +79,20 @@ class AdminDashboardPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Admin Console', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+        title: Text(
+          'Admin Console',
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         centerTitle: false,
         actions: [
           IconButton(
-            icon: Icon(theme.brightness == Brightness.light ? Icons.dark_mode_rounded : Icons.light_mode_rounded),
+            icon: Icon(
+              theme.brightness == Brightness.light
+                  ? Icons.dark_mode_rounded
+                  : Icons.light_mode_rounded,
+            ),
             onPressed: () => authProvider.toggleTheme(),
           ),
           IconButton(
@@ -104,7 +113,10 @@ class AdminDashboardPage extends StatelessWidget {
               padding: EdgeInsets.all(6.w),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [theme.colorScheme.primary, theme.colorScheme.secondary],
+                  colors: [
+                    theme.colorScheme.primary,
+                    theme.colorScheme.secondary,
+                  ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -120,12 +132,15 @@ class AdminDashboardPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                   Row(
+                  Row(
                     children: [
                       CircleAvatar(
                         radius: 24,
                         backgroundColor: Colors.white.withValues(alpha: 0.2),
-                        child: const Icon(Icons.admin_panel_settings, color: Colors.white),
+                        child: const Icon(
+                          Icons.admin_panel_settings,
+                          color: Colors.white,
+                        ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -134,11 +149,17 @@ class AdminDashboardPage extends StatelessWidget {
                           children: [
                             Text(
                               'System Overview',
-                              style: theme.textTheme.labelMedium?.copyWith(color: Colors.white.withValues(alpha: 0.8), letterSpacing: 1),
+                              style: theme.textTheme.labelMedium?.copyWith(
+                                color: Colors.white.withValues(alpha: 0.8),
+                                letterSpacing: 1,
+                              ),
                             ),
                             Text(
                               'Hello, ${authProvider.userName?.split(' ').first ?? 'Admin'}',
-                              style: theme.textTheme.headlineSmall?.copyWith(color: Colors.white, fontWeight: FontWeight.w900),
+                              style: theme.textTheme.headlineSmall?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w900,
+                              ),
                             ),
                           ],
                         ),
@@ -153,51 +174,66 @@ class AdminDashboardPage extends StatelessWidget {
 
             // Statistics Grid
             Consumer3<ProductProvider, BookingProvider, EmployeeProvider>(
-              builder: (context, productProvider, bookingProvider, employeeProvider, child) {
-                return GridView.count(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 4.w,
-                  mainAxisSpacing: 4.w,
-                  childAspectRatio: 1.2,
-                  children: [
-                    _StatCard(
-                      title: 'Services',
-                      value: productProvider.totalProductCount.toString(),
-                      icon: 'business',
-                      color: Colors.blue,
-                      index: 0,
-                    ),
-                    _StatCard(
-                      title: 'Bookings',
-                      value: bookingProvider.totalBookingCount.toString(),
-                      icon: 'assignment',
-                      color: Colors.green,
-                      index: 1,
-                    ),
-                    _StatCard(
-                      title: 'Team Size',
-                      value: employeeProvider.totalEmployeeCount.toString(),
-                      icon: 'people',
-                      color: Colors.orange,
-                      index: 2,
-                    ),
-                    _StatCard(
-                      title: 'Pending',
-                      value: bookingProvider.getPendingBookings().length.toString(),
-                      icon: 'pending',
-                      color: Colors.red,
-                      index: 3,
-                    ),
-                  ],
-                );
-              },
+              builder:
+                  (
+                    context,
+                    productProvider,
+                    bookingProvider,
+                    employeeProvider,
+                    child,
+                  ) {
+                    return GridView.count(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 4.w,
+                      mainAxisSpacing: 4.w,
+                      childAspectRatio: 1.2,
+                      children: [
+                        _StatCard(
+                          title: 'Services',
+                          value: productProvider.totalProductCount.toString(),
+                          icon: 'business',
+                          color: Colors.blue,
+                          index: 0,
+                        ),
+                        _StatCard(
+                          title: 'Bookings',
+                          value: bookingProvider.totalBookingCount.toString(),
+                          icon: 'assignment',
+                          color: Colors.green,
+                          index: 1,
+                        ),
+                        _StatCard(
+                          title: 'Team Size',
+                          value: employeeProvider.totalEmployeeCount.toString(),
+                          icon: 'people',
+                          color: Colors.orange,
+                          index: 2,
+                        ),
+                        _StatCard(
+                          title: 'Pending',
+                          value: bookingProvider
+                              .getPendingBookings()
+                              .length
+                              .toString(),
+                          icon: 'pending',
+                          color: Colors.red,
+                          index: 3,
+                        ),
+                      ],
+                    );
+                  },
             ),
 
             SizedBox(height: 4.h),
 
-            Text('Quick Actions', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900)).animate().fadeIn(delay: 400.ms),
+            Text(
+              'Quick Actions',
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w900,
+              ),
+            ).animate().fadeIn(delay: 400.ms),
             SizedBox(height: 2.h),
             Row(
               children: [
@@ -206,7 +242,9 @@ class AdminDashboardPage extends StatelessWidget {
                     title: 'New Service',
                     icon: 'add_circle',
                     color: theme.colorScheme.primary,
-                    onTap: () => context.findAncestorStateOfType<_AdminDashboardScreenState>()?._onBottomNavTap(1),
+                    onTap: () => context
+                        .findAncestorStateOfType<_AdminDashboardScreenState>()
+                        ?._onBottomNavTap(1),
                   ),
                 ),
                 SizedBox(width: 4.w),
@@ -215,7 +253,12 @@ class AdminDashboardPage extends StatelessWidget {
                     title: 'Analytics',
                     icon: 'analytics',
                     color: theme.colorScheme.secondary,
-                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminAnalyticsScreen())),
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const AdminAnalyticsScreen(),
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -226,22 +269,34 @@ class AdminDashboardPage extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Recent Activity', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900)),
+                Text(
+                  'Recent Activity',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
                 TextButton(onPressed: () {}, child: const Text('View All')),
               ],
             ).animate().fadeIn(delay: 600.ms),
-            
+
             SizedBox(height: 1.h),
 
             Consumer<BookingProvider>(
               builder: (context, bookingProvider, _) {
-                final recentBookings = bookingProvider.bookings.take(5).toList();
-                
+                final recentBookings = bookingProvider.bookings
+                    .take(5)
+                    .toList();
+
                 if (recentBookings.isEmpty) {
                   return Center(
                     child: Padding(
                       padding: EdgeInsets.all(10.w),
-                      child: Text('No recent activity found', style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+                      child: Text(
+                        'No recent activity found',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
                     ),
                   );
                 }
@@ -250,23 +305,47 @@ class AdminDashboardPage extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: theme.colorScheme.surface,
                     borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5)),
+                    border: Border.all(
+                      color: theme.colorScheme.outlineVariant.withValues(
+                        alpha: 0.5,
+                      ),
+                    ),
                   ),
                   child: ListView.separated(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     itemCount: recentBookings.length,
-                    separatorBuilder: (context, index) => Divider(height: 1, color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3)),
+                    separatorBuilder: (context, index) => Divider(
+                      height: 1,
+                      color: theme.colorScheme.outlineVariant.withValues(
+                        alpha: 0.3,
+                      ),
+                    ),
                     itemBuilder: (context, index) {
                       final booking = recentBookings[index];
                       return ListTile(
                         leading: CircleAvatar(
-                          backgroundColor: _getStatusColor(booking.status).withValues(alpha: 0.1),
-                          child: Icon(_getStatusIcon(booking.status), color: _getStatusColor(booking.status), size: 18),
+                          backgroundColor: _getStatusColor(
+                            booking.status,
+                          ).withValues(alpha: 0.1),
+                          child: Icon(
+                            _getStatusIcon(booking.status),
+                            color: _getStatusColor(booking.status),
+                            size: 18,
+                          ),
                         ),
-                        title: Text(booking.productTitle ?? 'Service', style: const TextStyle(fontWeight: FontWeight.bold)),
-                        subtitle: Text('${booking.clientName} • ${booking.timeSinceCreation}', style: theme.textTheme.bodySmall),
-                        trailing: const Icon(Icons.chevron_right_rounded, size: 20),
+                        title: Text(
+                          booking.productTitle ?? 'Service',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: Text(
+                          '${booking.clientName} • ${booking.timeSinceCreation}',
+                          style: theme.textTheme.bodySmall,
+                        ),
+                        trailing: const Icon(
+                          Icons.chevron_right_rounded,
+                          size: 20,
+                        ),
                         onTap: () {},
                       ).animate().fadeIn(delay: (700 + (index * 50)).ms);
                     },
@@ -282,21 +361,31 @@ class AdminDashboardPage extends StatelessWidget {
 
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
-      case 'pending': return Colors.orange;
-      case 'assigned': return Colors.blue;
-      case 'active': return Colors.green;
-      case 'completed': return Colors.teal;
-      default: return Colors.grey;
+      case 'pending':
+        return Colors.orange;
+      case 'assigned':
+        return Colors.blue;
+      case 'active':
+        return Colors.green;
+      case 'completed':
+        return Colors.teal;
+      default:
+        return Colors.grey;
     }
   }
 
   IconData _getStatusIcon(String status) {
     switch (status.toLowerCase()) {
-      case 'pending': return Icons.timer_outlined;
-      case 'assigned': return Icons.person_outline;
-      case 'active': return Icons.play_circle_outline;
-      case 'completed': return Icons.check_circle_outline;
-      default: return Icons.help_outline;
+      case 'pending':
+        return Icons.timer_outlined;
+      case 'assigned':
+        return Icons.person_outline;
+      case 'active':
+        return Icons.play_circle_outline;
+      case 'completed':
+        return Icons.check_circle_outline;
+      default:
+        return Icons.help_outline;
     }
   }
 
@@ -308,14 +397,20 @@ class AdminDashboardPage extends StatelessWidget {
         content: const Text('Are you sure you want to log out?'),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(context);
               await context.read<AuthProvider>().signOut();
               if (context.mounted) AppRouter.navigateToLogin(context);
             },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
             child: const Text('Logout'),
           ),
         ],
@@ -344,47 +439,57 @@ class _StatCard extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Container(
-      padding: EdgeInsets.all(5.w),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5)),
-        boxShadow: [
-          BoxShadow(
-            color: theme.shadowColor.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(16),
+          padding: EdgeInsets.all(5.w),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surface,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
             ),
-            child: CustomIconWidget(iconName: icon, color: color, size: 24),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                value,
-                style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900, color: theme.colorScheme.onSurface),
-              ),
-              Text(
-                title,
-                style: theme.textTheme.labelMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+            boxShadow: [
+              BoxShadow(
+                color: theme.shadowColor.withValues(alpha: 0.03),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
               ),
             ],
           ),
-        ],
-      ),
-    ).animate().fadeIn(delay: (200 + (index * 100)).ms).scale(begin: const Offset(0.9, 0.9));
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: CustomIconWidget(iconName: icon, color: color, size: 24),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    value,
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w900,
+                      color: theme.colorScheme.onSurface,
+                    ),
+                  ),
+                  Text(
+                    title,
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        )
+        .animate()
+        .fadeIn(delay: (200 + (index * 100)).ms)
+        .scale(begin: const Offset(0.9, 0.9));
   }
 }
 
@@ -420,12 +525,19 @@ class _QuickActionCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-              child: CustomIconWidget(iconName: icon, color: Colors.white, size: 28),
+              child: CustomIconWidget(
+                iconName: icon,
+                color: Colors.white,
+                size: 28,
+              ),
             ),
             SizedBox(height: 1.5.h),
             Text(
               title,
-              style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold, color: color),
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
               textAlign: TextAlign.center,
             ),
           ],
@@ -501,9 +613,7 @@ class AdminProductsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Products')),
-      body: const Center(
-        child: Text('Products Management - Coming Soon'),
-      ),
+      body: const Center(child: Text('Products Management - Coming Soon')),
     );
   }
 }
@@ -515,9 +625,7 @@ class AdminBookingsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Bookings')),
-      body: const Center(
-        child: Text('Bookings Management - Coming Soon'),
-      ),
+      body: const Center(child: Text('Bookings Management - Coming Soon')),
     );
   }
 }
@@ -529,9 +637,7 @@ class AdminEmployeesPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Employees')),
-      body: const Center(
-        child: Text('Employee Management - Coming Soon'),
-      ),
+      body: const Center(child: Text('Employee Management - Coming Soon')),
     );
   }
 }
