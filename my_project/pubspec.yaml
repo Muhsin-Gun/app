@@ -1,0 +1,74 @@
+name: promarket
+description: "Service Booking Platform - Multi-role marketplace connecting service providers with clients"
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.10.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Firebase
+  firebase_core: ^3.8.0
+  firebase_auth: ^5.3.3
+  cloud_firestore: ^5.5.0
+  
+  # Google Sign In
+  google_sign_in: ^6.2.1
+  
+  # State Management
+  provider: ^6.1.2
+  
+  # Image Handling
+  image_picker: ^1.2.1
+  image_cropper: ^11.0.0
+  cached_network_image: ^3.4.1
+  blurhash: ^1.2.0
+  intl: ^0.20.2
+  flutter_animate: ^4.5.2
+  
+  # HTTP & Networking
+  http: ^1.6.0
+  dio: ^5.9.0
+  
+  # UI & Design
+  sizer: ^2.0.15
+  google_fonts: ^6.3.3
+  flutter_svg: ^2.2.3
+  
+  # Utilities
+  fluttertoast: ^8.2.14
+  shared_preferences: ^2.5.4
+  connectivity_plus: ^6.1.5
+  permission_handler: ^11.4.0
+  local_auth: ^3.0.0
+  
+  # Charts & Analytics
+  fl_chart: ^0.65.0
+  percent_indicator: ^4.2.5
+  
+  # Apple Sign In (for iOS)
+  sign_in_with_apple: ^7.0.1
+  
+  # Camera
+  camera: ^0.10.6
+  
+  iconly: ^1.0.1
+  cupertino_icons: ^1.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+
+  # Assets
+  assets:
+    - assets/images/
+    - assets/icons/
